@@ -22,4 +22,11 @@ public class GlobalExceptionHandler {
                 // un BodyBuilder (usato per il body) ma un HeadersBuilder (usato per gli headers)
                 .body(new GeneralErrorResponseDTO(err404.getMessage(), 404));
     }
+
+    @ExceptionHandler
+    public ResponseEntity<GeneralErrorResponseDTO> error409(ConflictException err409) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new GeneralErrorResponseDTO(err409.getMessage(), 409));
+    }
 }
