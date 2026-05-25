@@ -54,7 +54,7 @@ public class OrdineServiceImpl implements OrdineService {
                     .contentType(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(PagamentoDTO.class);
-        } catch (HttpClientErrorException e) {
+        } catch (HttpClientErrorException e) { // Lanciata quando qualcosa va storto sopra
             GeneralErrorResponseDTO errorResponse =
                     // Questo metodo serve a trasformare il json di ritorno in una classe java
                     objectMapper.readValue(
@@ -67,7 +67,6 @@ public class OrdineServiceImpl implements OrdineService {
                 throw new PaymentRequiredException(errorResponse.getMessage()); // Grazie a quello fatto prima possiamo estrarre il messaggio
             throw new RuntimeException("Unknown error.");
         }
-        // TODO controllare che non dia un 402
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
         Ordine salvato = repositoryOrdine.save(ordine);
