@@ -1,0 +1,22 @@
+package it.itsacademy.gestioneordinirestclient.controller;
+
+import it.itsacademy.gestioneordinirestclient.dto.CreaOrdineDTO;
+import it.itsacademy.gestioneordinirestclient.dto.OrdineDTO;
+import it.itsacademy.gestioneordinirestclient.service.OrdineService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/ordini")
+@RequiredArgsConstructor
+public class OrdineController {
+    private final OrdineService ordineService;
+    private static final String json = "application/json";
+
+    @PostMapping(consumes = json, produces = json)
+    @ResponseStatus(HttpStatus.CREATED)
+    public OrdineDTO creaOrdine(@RequestBody CreaOrdineDTO nuovoOrdine) {
+        return ordineService.creaOrdine(nuovoOrdine);
+    }
+}
