@@ -1,6 +1,6 @@
 package it.itsacademy.gestioneordinirestclient.model;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
@@ -10,6 +10,7 @@ import java.util.UUID;
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
 public class Ordine {
+    @Id
     private UUID idOrdine;
     private Date dataCreazione;
     private String descrizione;

@@ -10,7 +10,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor @NoArgsConstructor
 public class OrdineDTO {
-    @Id private UUID idOrdine;
+    private UUID idOrdine;
     private Date dataCreazione;
     private String descrizione;
     private Ordine.StatoOrdine statoOrdine;
