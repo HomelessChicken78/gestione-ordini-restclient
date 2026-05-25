@@ -4,6 +4,9 @@ import it.itsacademy.gestioneordinirestclient.dto.*;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import org.mapstruct.*;
 
+import java.util.Collection;
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface OrdineMapper {
     @Mapping(target = "idOrdine", ignore = true)
@@ -12,4 +15,6 @@ public interface OrdineMapper {
     Ordine toEntity(CreaOrdineDTO nuovoOrdine);
 
     OrdineDTO toDTO(Ordine entity);
+
+    Collection<OrdineDTO> toDTO(List<Ordine> entities);
 }

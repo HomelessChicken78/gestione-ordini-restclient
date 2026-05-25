@@ -2,6 +2,7 @@ package it.itsacademy.gestioneordinirestclient.service;
 
 import it.itsacademy.gestioneordinirestclient.dto.*;
 import it.itsacademy.gestioneordinirestclient.exception.ConflictException;
+import it.itsacademy.gestioneordinirestclient.exception.NotFoundException;
 import it.itsacademy.gestioneordinirestclient.exception.PaymentRequiredException;
 import it.itsacademy.gestioneordinirestclient.exception.dto.GeneralErrorResponseDTO;
 import it.itsacademy.gestioneordinirestclient.mapper.OrdineMapper;
@@ -16,6 +17,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Service @Transactional
@@ -72,5 +75,33 @@ public class OrdineServiceImpl implements OrdineService {
         Ordine salvato = repositoryOrdine.save(ordine);
 
         return mapper.toDTO(salvato);
+    }
+
+    @Override
+    public OrdineDTO cercaOrdine(UUID idOrdine) {
+        return mapper.toDTO(repositoryOrdine.findByIdOrThrow(idOrdine));
+    }
+
+    @Override
+    public Collection<OrdineDTO> cercaTutti() {
+        return mapper.toDTO(repositoryOrdine.findAll());
+    }
+
+    @Override
+    public Collection<PagamentoDTO> pagamentiDellOrdine(UUID idOrdine) {
+        return List.of(); // TODO: Implement stub method
+    }
+
+    @Override
+    public void cancellaOrdine(UUID idOrdine) {
+        Ordine trovato = repositoryOrdine.findByIdOrThrow(idOrdine);
+
+        if (trovato.getStatoOrdine() == Ordine.StatoOrdine.PAGATO)
+            throw new ConflictException("Non è possibile cancellare un ordine già pagato.");
+
+        if (trovato.getStatoOrdine() == Ordine.StatoOrdine.ELIMINATO)
+            throw new NotFoundException("Non esiste un ordine con id " + idOrdine);
+
+        trovato.setStatoOrdine(Ordine.StatoOrdine.ELIMINATO);
     }
 }
