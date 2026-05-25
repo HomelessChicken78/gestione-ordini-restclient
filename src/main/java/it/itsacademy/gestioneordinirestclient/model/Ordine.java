@@ -10,6 +10,7 @@ import java.util.UUID;
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
 public class Ordine {
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Id private UUID idOrdine;
     private LocalDate dataCreazione = LocalDate.now();
     private String descrizione;
