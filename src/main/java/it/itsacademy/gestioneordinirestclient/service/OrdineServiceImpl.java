@@ -1,6 +1,7 @@
 package it.itsacademy.gestioneordinirestclient.service;
 
 import it.itsacademy.gestioneordinirestclient.dto.*;
+import it.itsacademy.gestioneordinirestclient.exception.ConflictException;
 import it.itsacademy.gestioneordinirestclient.mapper.OrdineMapper;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
@@ -31,6 +32,14 @@ public class OrdineServiceImpl implements OrdineService {
     @Override
     public OrdineDTO pagaOrdine(UUID idOrdine) {
         Ordine ordine = repositoryOrdine.findByIdOrThrow(idOrdine);
+
+        // Controlla che l'ordine non sia già stato pagato
+        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO)
+            throw new ConflictException("Non è possibile pagare un ordine già pagato");
+
+        // Controlla che l'ordine non sia cancellato
+        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.ELIMINATO)
+            throw new ConflictException("Non è possibile pagare un ordine eliminato");
 
         PagamentoDTO risposta = restClient.post()
                 .uri("http://localhost:8081/api/pagamenti/" + idOrdine)
