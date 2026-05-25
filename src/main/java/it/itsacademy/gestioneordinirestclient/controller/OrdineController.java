@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/ordini")
 @RequiredArgsConstructor
@@ -18,5 +20,10 @@ public class OrdineController {
     @ResponseStatus(HttpStatus.CREATED)
     public OrdineDTO creaOrdine(@RequestBody CreaOrdineDTO nuovoOrdine) {
         return ordineService.creaOrdine(nuovoOrdine);
+    }
+
+    @PatchMapping(path = "/{idOrdine}/paga", produces = json)
+    public OrdineDTO pagaOrdine(@PathVariable UUID idOrdine) {
+        return ordineService.pagaOrdine(idOrdine);
     }
 }

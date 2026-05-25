@@ -7,4 +7,5 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface PagamentoMapper {
     PagamentoDTO toDTO(Pagamento entity);
+    Pagamento toEntity(PagamentoDTO risposta);
 }

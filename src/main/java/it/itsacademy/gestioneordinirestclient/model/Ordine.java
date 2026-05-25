@@ -19,7 +19,7 @@ public class Ordine {
     private StatoOrdine statoOrdine = StatoOrdine.DAPAGARE;
     private Double totale;
 
-    @OneToMany(cascade = CascadeType.REMOVE)
+    @OneToMany(cascade = {CascadeType.MERGE, CascadeType.REMOVE})
     private Collection<Pagamento> pagamenti = new ArrayList<>();
 
     public enum StatoOrdine {
