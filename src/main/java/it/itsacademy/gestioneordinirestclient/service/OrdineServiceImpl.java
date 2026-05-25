@@ -33,7 +33,8 @@ public class OrdineServiceImpl implements OrdineService {
         Ordine ordine = repositoryOrdine.findByIdOrThrow(idOrdine);
 
         PagamentoDTO risposta = restClient.post()
-                .uri("http://localhost:8081/api/pagamenti")
+                .uri("http://localhost:8081/api/pagamenti/" + idOrdine)
+                .body(new CreaPagamentoDTO(ordine.getTotale()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .body(PagamentoDTO.class);
