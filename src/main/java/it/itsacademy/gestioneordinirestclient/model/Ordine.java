@@ -12,9 +12,9 @@ import java.util.UUID;
 public class Ordine {
     @Id
     private UUID idOrdine;
-    private Date dataCreazione;
+    private Date dataCreazione = new Date();
     private String descrizione;
-    private StatoOrdine statoOrdine;
+    private StatoOrdine statoOrdine = StatoOrdine.DAPAGARE;
     private Double totale;
 
     public enum StatoOrdine {
