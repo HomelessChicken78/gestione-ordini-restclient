@@ -4,11 +4,12 @@ import it.itsacademy.gestioneordinirestclient.dto.*;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = PagamentoMapper.class)
 public interface OrdineMapper {
     @Mapping(target = "idOrdine", ignore = true)
     @Mapping(target = "dataCreazione", ignore = true)
     @Mapping(target = "statoOrdine", ignore = true)
+    @Mapping(target = "pagamenti", ignore = true)
     Ordine toEntity(CreaOrdineDTO nuovoOrdine);
 
     OrdineDTO toDTO(Ordine entity);

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 
 @Entity
@@ -16,6 +18,9 @@ public class Ordine {
     private String descrizione;
     private StatoOrdine statoOrdine = StatoOrdine.DAPAGARE;
     private Double totale;
+
+    @OneToMany(cascade = CascadeType.REMOVE)
+    private Collection<Pagamento> pagamenti = new ArrayList<>();
 
     public enum StatoOrdine {
         DAPAGARE, PAGATO, ELIMINATO
