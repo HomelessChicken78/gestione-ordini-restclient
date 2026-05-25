@@ -15,7 +15,6 @@ public class OrdineDTO {
     private String descrizione;
     private StatoOrdine statoOrdine;
     private Double totale;
-    private Collection<PagamentoDTO> pagamenti = new ArrayList<>();
 
     public enum StatoOrdine {
         DAPAGARE, PAGATO, ELIMINATO

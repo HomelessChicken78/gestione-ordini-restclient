@@ -2,9 +2,7 @@ package it.itsacademy.gestioneordinirestclient.service;
 
 import it.itsacademy.gestioneordinirestclient.dto.*;
 import it.itsacademy.gestioneordinirestclient.mapper.OrdineMapper;
-import it.itsacademy.gestioneordinirestclient.mapper.PagamentoMapper;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
-import it.itsacademy.gestioneordinirestclient.model.Pagamento;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +16,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrdineServiceImpl implements OrdineService {
     private final OrdineMapper mapper;
-    private final PagamentoMapper pagamentoMapper;
     private final RepositoryOrdine repositoryOrdine;
     private final RestClient restClient;
 
@@ -40,10 +37,9 @@ public class OrdineServiceImpl implements OrdineService {
                 .contentType(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .body(PagamentoDTO.class);
+        // TODO controllare che non dia un 402
 
-        Pagamento nuovoPagamento = pagamentoMapper.toEntity(risposta);
-
-        ordine.getPagamenti().add(nuovoPagamento);
+        ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
         Ordine salvato = repositoryOrdine.save(ordine);
 
         return mapper.toDTO(salvato);
