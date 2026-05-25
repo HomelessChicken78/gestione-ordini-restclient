@@ -13,7 +13,7 @@ public class OrdineDTO {
     private UUID idOrdine;
     private Date dataCreazione;
     private String descrizione;
-    private Ordine.StatoOrdine statoOrdine;
+    private StatoOrdine statoOrdine;
     private Double totale;
 
     public enum StatoOrdine {
