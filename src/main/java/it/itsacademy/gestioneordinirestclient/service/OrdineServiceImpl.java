@@ -2,14 +2,19 @@ package it.itsacademy.gestioneordinirestclient.service;
 
 import it.itsacademy.gestioneordinirestclient.dto.*;
 import it.itsacademy.gestioneordinirestclient.exception.ConflictException;
+import it.itsacademy.gestioneordinirestclient.exception.PaymentRequiredException;
+import it.itsacademy.gestioneordinirestclient.exception.dto.GeneralErrorResponseDTO;
 import it.itsacademy.gestioneordinirestclient.mapper.OrdineMapper;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
 
@@ -19,6 +24,7 @@ public class OrdineServiceImpl implements OrdineService {
     private final OrdineMapper mapper;
     private final RepositoryOrdine repositoryOrdine;
     private final RestClient restClient;
+    private final ObjectMapper objectMapper; // importante per estrarre il messaggio d'errore 402 dall'altro microservizio
 
     @Override
     public OrdineDTO creaOrdine(CreaOrdineDTO nuovoOrdine) {
@@ -41,12 +47,26 @@ public class OrdineServiceImpl implements OrdineService {
         if (ordine.getStatoOrdine() == Ordine.StatoOrdine.ELIMINATO)
             throw new ConflictException("Non è possibile pagare un ordine eliminato");
 
-        PagamentoDTO risposta = restClient.post()
-                .uri("http://localhost:8081/api/pagamenti/" + idOrdine)
-                .body(new CreaPagamentoDTO(ordine.getTotale()))
-                .contentType(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .body(PagamentoDTO.class);
+        try {
+            PagamentoDTO risposta = restClient.post()
+                    .uri("http://localhost:8081/api/pagamenti/" + idOrdine)
+                    .body(new CreaPagamentoDTO(ordine.getTotale()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .body(PagamentoDTO.class);
+        } catch (HttpClientErrorException e) {
+            GeneralErrorResponseDTO errorResponse =
+                    // Questo metodo serve a trasformare il json di ritorno in una classe java
+                    objectMapper.readValue(
+                            e.getResponseBodyAsString(), // Questo contiene una stringa che contiene tutto il json
+                            GeneralErrorResponseDTO.class // Questo dice all'API di convertire quel json nella nostra classe
+                    );
+
+            // Se è un 402:
+            if (e.getStatusCode() == HttpStatus.PAYMENT_REQUIRED)
+                throw new PaymentRequiredException(errorResponse.getMessage()); // Grazie a quello fatto prima possiamo estrarre il messaggio
+            throw new RuntimeException("Unknown error.");
+        }
         // TODO controllare che non dia un 402
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
