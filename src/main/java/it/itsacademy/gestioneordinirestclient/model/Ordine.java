@@ -16,6 +16,8 @@ public class Ordine {
     @Id private UUID idOrdine;
     private LocalDate dataCreazione = LocalDate.now();
     private String descrizione;
+
+    @Enumerated(EnumType.STRING)
     private StatoOrdine statoOrdine = StatoOrdine.DAPAGARE;
     private Double totale;
 
