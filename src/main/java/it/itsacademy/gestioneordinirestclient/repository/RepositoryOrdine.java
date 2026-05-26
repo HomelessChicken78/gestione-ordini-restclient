@@ -5,7 +5,7 @@ import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 public interface RepositoryOrdine extends JpaRepository<Ordine, UUID> {
@@ -16,5 +16,5 @@ public interface RepositoryOrdine extends JpaRepository<Ordine, UUID> {
     }
 
     @Query("SELECT o FROM Ordine AS o WHERE o.statoOrdine <> 'ELIMINATO'")
-    Collection<Ordine> findAllNotDeleted();
+    List<Ordine> findAllNotDeleted();
 }
