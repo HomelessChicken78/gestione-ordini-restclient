@@ -10,6 +10,7 @@ import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,6 +30,9 @@ public class OrdineServiceImpl implements OrdineService {
     private final RepositoryOrdine repositoryOrdine;
     private final RestClient restClient;
     private final ObjectMapper objectMapper; // importante per estrarre il messaggio d'errore 402 dall'altro microservizio
+
+    @Value("${api.gestione-pagamenti.url}")
+    private String gestionePagamentiUrl;
 
     @Override
     public OrdineDTO creaOrdine(CreaOrdineDTO nuovoOrdine) {
@@ -53,7 +57,7 @@ public class OrdineServiceImpl implements OrdineService {
 
         try {
             PagamentoDTO risposta = restClient.post()
-                    .uri("http://localhost:8081/api/pagamenti/" + idOrdine)
+                    .uri(gestionePagamentiUrl + "/pagamenti/" + idOrdine)
                     .body(new CreaPagamentoDTO(ordine.getTotale()))
                     .contentType(MediaType.APPLICATION_JSON)
                     .retrieve()
@@ -94,7 +98,7 @@ public class OrdineServiceImpl implements OrdineService {
 
         try {
         return restClient.get()
-                .uri("http://localhost:8081/api/pagamenti/" + idOrdine)
+                .uri(gestionePagamentiUrl + "/pagamenti/" + idOrdine)
                 .retrieve()
                 .body(new ParameterizedTypeReference<Collection<PagamentoDTO>>() {});
         } catch (HttpClientErrorException e) {
