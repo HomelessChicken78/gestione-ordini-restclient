@@ -92,10 +92,20 @@ public class OrdineServiceImpl implements OrdineService {
     public Collection<PagamentoDTO> pagamentiDellOrdine(UUID idOrdine) {
         repositoryOrdine.findByIdOrThrow(idOrdine);
 
+        try {
         return restClient.get()
                 .uri("http://localhost:8081/api/pagamenti/" + idOrdine)
                 .retrieve()
                 .body(new ParameterizedTypeReference<Collection<PagamentoDTO>>() {});
+        } catch (HttpClientErrorException e) {
+            GeneralErrorResponseDTO errorResponse =
+                    // Questo metodo serve a trasformare il json di ritorno in una classe java
+                    objectMapper.readValue(
+                            e.getResponseBodyAsString(), // Questo contiene una stringa che contiene tutto il json
+                            GeneralErrorResponseDTO.class // Questo dice all'API di convertire quel json nella nostra classe
+                    );
+            throw new RuntimeException("Unknown error.");
+        }
     }
 
     @Override
