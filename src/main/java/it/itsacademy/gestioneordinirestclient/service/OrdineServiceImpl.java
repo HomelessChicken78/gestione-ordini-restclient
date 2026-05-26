@@ -84,7 +84,7 @@ public class OrdineServiceImpl implements OrdineService {
 
     @Override
     public Collection<OrdineDTO> cercaTutti() {
-        return mapper.toDTO(repositoryOrdine.findAll());
+        return mapper.toDTO(repositoryOrdine.findAllNotDeleted());
     }
 
     @Override
@@ -98,9 +98,6 @@ public class OrdineServiceImpl implements OrdineService {
 
         if (trovato.getStatoOrdine() == Ordine.StatoOrdine.PAGATO)
             throw new ConflictException("Non è possibile cancellare un ordine già pagato.");
-
-        if (trovato.getStatoOrdine() == Ordine.StatoOrdine.ELIMINATO)
-            throw new NotFoundException("Non esiste un ordine con id " + idOrdine);
 
         trovato.setStatoOrdine(Ordine.StatoOrdine.ELIMINATO);
     }
