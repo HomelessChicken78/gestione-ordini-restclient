@@ -10,6 +10,7 @@ import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -89,7 +90,12 @@ public class OrdineServiceImpl implements OrdineService {
 
     @Override
     public Collection<PagamentoDTO> pagamentiDellOrdine(UUID idOrdine) {
-        return List.of(); // TODO: Implement stub method
+        repositoryOrdine.findByIdOrThrow(idOrdine);
+
+        return restClient.get()
+                .uri("http://localhost:8081/api/pagamenti/" + idOrdine)
+                .retrieve()
+                .body(new ParameterizedTypeReference<Collection<PagamentoDTO>>() {});
     }
 
     @Override
