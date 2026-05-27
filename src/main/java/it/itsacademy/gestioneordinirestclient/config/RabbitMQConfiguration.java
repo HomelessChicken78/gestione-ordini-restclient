@@ -14,8 +14,24 @@ public class RabbitMQConfiguration {
      * Senza volume se si distrugge il container si perde per sempre comunque la coda.
      */
     @Bean
-    public Queue queue() {
+    public Queue queueOrders() {
         return new Queue("payments.order.queue", true);
+    }
+
+    /*
+    Altra coda usata dal consumer per comunicare che il pagamento è andato a buon fine
+     */
+    @Bean
+    public Queue queuePaymentSuccess() {
+        return new Queue("payments.success.queue", true);
+    }
+
+    /*
+    Ultima coda usata dal consumer per comunicare che il pagamento è andato storto
+     */
+    @Bean
+    public Queue queuePaymentFailure() {
+        return new Queue("payments.failure.queue", true);
     }
 
     /*
@@ -38,17 +54,48 @@ public class RabbitMQConfiguration {
      * sull'exchange "payments.exchange" che hanno come routing key esatta
      * "payments.order.created" e mettili nella coda 'payments.order.queue'".
      */
+    // Attenzione: spring deve capire quale Queue iniettare in questo binding. Per farlo spring legge il
+    // nome del parametro e cerca un bean con lo stesso nome. Dunque queueOrders significa che andrà a cercare
+    // un bean con nome queueOrders (che abbiamo definito sopra). In questo modo Spring usa la queue payments.order.queue
     @Bean
-    public Binding binding(Queue queue, Exchange exchange) {
+    public Binding ordersBinding(Queue queueOrders, Exchange exchange) {
         /*Quindi quello che succede: il producer invia al direct exchange un messaggio con payments.order.created.
         L'exchange visto che è direct riceve payments.order.created e cerca la coda che ha il binding
         che chiede la routing key payments.order.created.
         Lo trova e invia il messaggio sulla coda payments.order.queue
         */
         // Utilizza il BindingBuilder fornito da Spring AMQP per costruire la regola in modo fluido
-        return BindingBuilder.bind(queue)                 // Collega questa specifica coda...
+        return BindingBuilder.bind(queueOrders)                 // Collega questa specifica coda...
                 .to(exchange)                             // ...a questo specifico exchange...
                 .with("payments.order.created")           // ...usando questa precisa routing key (chiave di instradamento)...
+                .noargs();
+    }
+
+    /*
+    Crea un altro binding per la queue payments.success.queue
+     */
+    // Attenzione: spring deve capire quale Queue iniettare in questo binding. Per farlo spring legge il
+    // nome del parametro e cerca un bean con lo stesso nome. Dunque queuePaymentSuccess significa che andrà a cercare
+    // un bean con nome queuePaymentSuccess (che abbiamo definito sopra). In questo modo Spring usa la queue payments.success.queue
+    @Bean
+    public Binding paymentSuccessBinding(Queue queuePaymentSuccess, Exchange exchange) {
+        return BindingBuilder.bind(queuePaymentSuccess)
+                .to(exchange)
+                .with("payments.accettato")
+                .noargs();
+    }
+
+    /*
+    Crea un ultimo binding per la queue payments.failure.queue
+     */
+    // Attenzione: spring deve capire quale Queue iniettare in questo binding. Per farlo spring legge il
+    // nome del parametro e cerca un bean con lo stesso nome. Dunque queuePaymentFailure significa che andrà a cercare
+    // un bean con nome queuePaymentFailure (che abbiamo definito sopra). In questo modo Spring usa la queue payments.failure.queue
+    @Bean
+    public Binding paymentFailureBinding(Queue queuePaymentFailure, Exchange exchange) {
+        return BindingBuilder.bind(queuePaymentFailure)
+                .to(exchange)
+                .with("payments.rifiutato")
                 .noargs();
     }
 }
