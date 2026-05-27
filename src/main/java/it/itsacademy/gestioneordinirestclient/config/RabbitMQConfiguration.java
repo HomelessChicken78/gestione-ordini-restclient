@@ -13,8 +13,8 @@ public class RabbitMQConfiguration {
      * ovvero sopravviverà a un eventuale riavvio del server RabbitMQ.
      * Senza volume se si distrugge il container si perde per sempre comunque la coda.
      */
-    @Bean public Queue queue()
-    {
+    @Bean
+    public Queue queue() {
         return new Queue("payments.order.queue", true);
     }
 
@@ -24,8 +24,8 @@ public class RabbitMQConfiguration {
      * ma li inviano agli Exchange. Un DirectExchange instrada i messaggi
      * verso una specifica coda basandosi su una "routing key" esatta.
      */
-    @Bean public DirectExchange exchange()
-    {
+    @Bean
+    public DirectExchange exchange() {
         return new DirectExchange("payments.exchange");
     }
 
@@ -39,8 +39,12 @@ public class RabbitMQConfiguration {
      * "payments.order.created" e mettili nella coda 'payments.order.queue'".
      */
     @Bean
-    public Binding binding(Queue queue, Exchange exchange)
-    {
+    public Binding binding(Queue queue, Exchange exchange) {
+        /*Quindi quello che succede: il producer invia al direct exchange un messaggio con payments.order.created.
+        L'exchange visto che è direct riceve payments.order.created e cerca la coda che ha il binding
+        che chiede la routing key payments.order.created.
+        Lo trova e invia il messaggio sulla coda payments.order.queue
+        */
         // Utilizza il BindingBuilder fornito da Spring AMQP per costruire la regola in modo fluido
         return BindingBuilder.bind(queue)                 // Collega questa specifica coda...
                 .to(exchange)                             // ...a questo specifico exchange...
