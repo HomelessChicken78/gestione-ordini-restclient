@@ -22,6 +22,7 @@ public class Ordine {
     private Double totale;
 
     public enum StatoOrdine {
-        DAPAGARE, PAGATO, ELIMINATO
+        DAPAGARE, PAGATO, ELIMINATO,
+        INELABORAZIONE // Stato temporaneo usato quando l'altro microservizio elabora la nostra richiesta di pagamento
     }
 }
