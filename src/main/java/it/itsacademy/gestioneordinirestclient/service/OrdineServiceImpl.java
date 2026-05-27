@@ -10,6 +10,7 @@ import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ public class OrdineServiceImpl implements OrdineService {
     private final OrdineMapper mapper;
     private final RepositoryOrdine repositoryOrdine;
     private final RestClient restClient;
+    private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper; // importante per estrarre il messaggio d'errore 402 dall'altro microservizio
 
     @Value("${api.gestione-pagamenti.url}")
@@ -55,29 +57,21 @@ public class OrdineServiceImpl implements OrdineService {
         if (ordine.getStatoOrdine() == Ordine.StatoOrdine.ELIMINATO)
             throw new ConflictException("Non è possibile pagare un ordine eliminato");
 
-        try {
-            PagamentoDTO risposta = restClient.post()
-                    .uri(gestionePagamentiUrl + "/pagamenti/" + idOrdine)
-                    .body(new CreaPagamentoDTO(ordine.getTotale()))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .body(PagamentoDTO.class);
-        } catch (HttpClientErrorException e) { // Lanciata quando qualcosa va storto sopra
-            GeneralErrorResponseDTO errorResponse =
-                    // Questo metodo serve a trasformare il json di ritorno in una classe java
-                    objectMapper.readValue(
-                            e.getResponseBodyAsString(), // Questo contiene una stringa che contiene tutto il json
-                            GeneralErrorResponseDTO.class // Questo dice all'API di convertire quel json nella nostra classe
-                    );
-
-            // Se è un 402:
-            if (e.getStatusCode() == HttpStatus.PAYMENT_REQUIRED)
-                throw new PaymentRequiredException(errorResponse.getMessage()); // Grazie a quello fatto prima possiamo estrarre il messaggio
-            throw new RuntimeException("Unknown error.");
-        }
-
+        // Prima mettiamo l'ordine come pagato poi inviamo il messaggio sulla coda.
+        // Se facessimo il contrario potrebbe accadere che il .save vada in errore ma il messaggio è già stato inviato
+        // al microservizi dei pagamenti, quindi accadrebbe che il pagamento non risulta pagato anche se il pagamento
+        // è avvenuto con successo: il messaggio è inviato all'altro microservizio, il .save fallisce, rollback su
+        // questo metodo (ma non sull'altro microservizio), pagamento non .PAGATO ma pagamento riuscito nell'altro microservizio.
+        // In questo modo se il .save fallisce la transazione viene rollbackata prima ancora di inviare il messaggio.
+        // Per buona norma l'invio del messaggio andrebbe sempre all'ultimo.
         ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
         Ordine salvato = repositoryOrdine.save(ordine);
+
+        // Invia il messaggio all'exchange "payments.exchange" con routing key "payments.order.created". Ci penserà
+        // lui a inviarla sulla queue corretta attraverso il binding.7
+        // TODO Attualmente se il microservizio pagamenti fallisce il pagamento viene comunque segnato come pagato
+        rabbitTemplate.convertAndSend("payments.exchange", "payments.order.created",
+                new CreaPagamentoDTO(ordine.getTotale()));
 
         return mapper.toDTO(salvato);
     }
