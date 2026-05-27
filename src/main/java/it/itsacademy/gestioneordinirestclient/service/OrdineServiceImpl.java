@@ -104,8 +104,8 @@ public class OrdineServiceImpl implements OrdineService {
     public void cancellaOrdine(UUID idOrdine) {
         Ordine trovato = repositoryOrdine.findByIdOrThrow(idOrdine);
 
-        if (trovato.getStatoOrdine() == Ordine.StatoOrdine.PAGATO)
-            throw new ConflictException("Non è possibile cancellare un ordine già pagato.");
+        if (trovato.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || trovato.getStatoOrdine() == Ordine.StatoOrdine.INELABORAZIONE)
+            throw new ConflictException("Non è possibile cancellare un ordine già pagato o in elaborazione.");
 
         trovato.setStatoOrdine(Ordine.StatoOrdine.ELIMINATO);
     }
