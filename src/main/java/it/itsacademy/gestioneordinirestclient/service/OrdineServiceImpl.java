@@ -71,7 +71,7 @@ public class OrdineServiceImpl implements OrdineService {
         // lui a inviarla sulla queue corretta attraverso il binding.7
         // TODO Attualmente se il microservizio pagamenti fallisce il pagamento viene comunque segnato come pagato
         rabbitTemplate.convertAndSend("payments.exchange", "payments.order.created",
-                new CreaPagamentoDTO(ordine.getTotale()));
+                new CreaPagamentoDTO(ordine.getIdOrdine(), ordine.getTotale()));
 
         return mapper.toDTO(salvato);
     }
