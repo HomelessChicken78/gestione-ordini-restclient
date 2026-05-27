@@ -69,7 +69,6 @@ public class OrdineServiceImpl implements OrdineService {
 
         // Invia il messaggio all'exchange "payments.exchange" con routing key "payments.order.created". Ci penserà
         // lui a inviarla sulla queue corretta attraverso il binding.
-        // TODO Attualmente se il microservizio pagamenti fallisce il pagamento viene comunque segnato come pagato
         rabbitTemplate.convertAndSend("payments.exchange", "payments.order.created",
                 new CreaPagamentoDTO(ordine.getIdOrdine(), ordine.getTotale()));
 
