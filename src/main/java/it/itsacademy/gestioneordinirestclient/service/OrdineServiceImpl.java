@@ -49,9 +49,9 @@ public class OrdineServiceImpl implements OrdineService {
     public OrdineDTO pagaOrdine(UUID idOrdine) {
         Ordine ordine = repositoryOrdine.findByIdOrThrow(idOrdine);
 
-        // Controlla che l'ordine non sia già stato pagato
-        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO)
-            throw new ConflictException("Non è possibile pagare un ordine già pagato");
+        // Controlla che l'ordine non sia già stato pagato o in elaborazione (per evitare di inondare di richieste inutili)
+        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || ordine.getStatoOrdine() == Ordine.StatoOrdine.INELABORAZIONE)
+            throw new ConflictException("Non è possibile pagare un ordine già pagato o in elaborazione");
 
         // Controlla che l'ordine non sia cancellato
         if (ordine.getStatoOrdine() == Ordine.StatoOrdine.ELIMINATO)
@@ -64,11 +64,11 @@ public class OrdineServiceImpl implements OrdineService {
         // questo metodo (ma non sull'altro microservizio), pagamento non .PAGATO ma pagamento riuscito nell'altro microservizio.
         // In questo modo se il .save fallisce la transazione viene rollbackata prima ancora di inviare il messaggio.
         // Per buona norma l'invio del messaggio andrebbe sempre all'ultimo.
-        ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
+        ordine.setStatoOrdine(Ordine.StatoOrdine.INELABORAZIONE); // Segna il pagamento come in elaborazione
         Ordine salvato = repositoryOrdine.save(ordine);
 
         // Invia il messaggio all'exchange "payments.exchange" con routing key "payments.order.created". Ci penserà
-        // lui a inviarla sulla queue corretta attraverso il binding.7
+        // lui a inviarla sulla queue corretta attraverso il binding.
         // TODO Attualmente se il microservizio pagamenti fallisce il pagamento viene comunque segnato come pagato
         rabbitTemplate.convertAndSend("payments.exchange", "payments.order.created",
                 new CreaPagamentoDTO(ordine.getIdOrdine(), ordine.getTotale()));
