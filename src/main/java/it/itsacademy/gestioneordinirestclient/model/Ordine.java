@@ -16,11 +16,11 @@ public class Ordine {
     private String descrizione;
 
     @Enumerated(EnumType.STRING)
-    private StatoOrdine statoOrdine = StatoOrdine.DAPAGARE;
+    private StatoOrdine statoOrdine = StatoOrdine.DA_PAGARE;
     private Double totale;
 
     public enum StatoOrdine {
-        DAPAGARE, PAGATO, ELIMINATO,
-        INELABORAZIONE // Stato temporaneo usato quando l'altro microservizio elabora la nostra richiesta di pagamento
+        DA_PAGARE, PAGATO, ELIMINATO,
+        IN_ELABORAZIONE // Stato temporaneo usato quando l'altro microservizio elabora la nostra richiesta di pagamento
     }
 }

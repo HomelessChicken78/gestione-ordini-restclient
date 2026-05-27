@@ -21,7 +21,7 @@ public class RicevitorePagamento {
         // Per sicurezza controlliamo che lo stato sia in elaborazione.
         // Infatti AMQ garantisce che il messaggio sia mandato almeno una volta, ma nulla vieta che venga inviato due volte.
         // NB: Non lanciamo eccezioni RabbitMQ penserebbe che ci sia stato un errore di elaborazione e rimetterebbe il messaggio in coda
-        if (ordine.getStatoOrdine() != Ordine.StatoOrdine.INELABORAZIONE)
+        if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
@@ -34,9 +34,9 @@ public class RicevitorePagamento {
         // Per sicurezza controlliamo che lo stato sia in elaborazione.
         // Infatti AMQ garantisce che il messaggio sia mandato almeno una volta, ma nulla vieta che venga inviato due volte.
         // NB: Non lanciamo eccezioni RabbitMQ penserebbe che ci sia stato un errore di elaborazione e rimetterebbe il messaggio in coda
-        if (ordine.getStatoOrdine() != Ordine.StatoOrdine.INELABORAZIONE)
+        if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-        ordine.setStatoOrdine(Ordine.StatoOrdine.DAPAGARE);
+        ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
     }
 }

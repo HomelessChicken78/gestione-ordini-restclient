@@ -45,7 +45,7 @@ public class OrdineServiceImpl implements OrdineService {
         Ordine ordine = repositoryOrdine.findByIdOrThrow(idOrdine);
 
         // Controlla che l'ordine non sia già stato pagato o in elaborazione (per evitare di inondare di richieste inutili)
-        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || ordine.getStatoOrdine() == Ordine.StatoOrdine.INELABORAZIONE)
+        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || ordine.getStatoOrdine() == Ordine.StatoOrdine.IN_ELABORAZIONE)
             throw new ConflictException("Non è possibile pagare un ordine già pagato o in elaborazione");
 
         // Controlla che l'ordine non sia cancellato
@@ -59,7 +59,7 @@ public class OrdineServiceImpl implements OrdineService {
         // questo metodo (ma non sull'altro microservizio), pagamento non .PAGATO ma pagamento riuscito nell'altro microservizio.
         // In questo modo se il .save fallisce la transazione viene rollbackata prima ancora di inviare il messaggio.
         // Per buona norma l'invio del messaggio andrebbe sempre all'ultimo.
-        ordine.setStatoOrdine(Ordine.StatoOrdine.INELABORAZIONE); // Segna il pagamento come in elaborazione
+        ordine.setStatoOrdine(Ordine.StatoOrdine.IN_ELABORAZIONE); // Segna il pagamento come in elaborazione
         Ordine salvato = repositoryOrdine.save(ordine);
 
         // Invia il messaggio all'exchange "payments.exchange" con routing key "payments.order.created". Ci penserà
@@ -104,7 +104,7 @@ public class OrdineServiceImpl implements OrdineService {
     public void cancellaOrdine(UUID idOrdine) {
         Ordine trovato = repositoryOrdine.findByIdOrThrow(idOrdine);
 
-        if (trovato.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || trovato.getStatoOrdine() == Ordine.StatoOrdine.INELABORAZIONE)
+        if (trovato.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || trovato.getStatoOrdine() == Ordine.StatoOrdine.IN_ELABORAZIONE)
             throw new ConflictException("Non è possibile cancellare un ordine già pagato o in elaborazione.");
 
         trovato.setStatoOrdine(Ordine.StatoOrdine.ELIMINATO);
