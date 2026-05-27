@@ -2,8 +2,6 @@ package it.itsacademy.gestioneordinirestclient.service;
 
 import it.itsacademy.gestioneordinirestclient.dto.*;
 import it.itsacademy.gestioneordinirestclient.exception.ConflictException;
-import it.itsacademy.gestioneordinirestclient.exception.NotFoundException;
-import it.itsacademy.gestioneordinirestclient.exception.PaymentRequiredException;
 import it.itsacademy.gestioneordinirestclient.exception.dto.GeneralErrorResponseDTO;
 import it.itsacademy.gestioneordinirestclient.mapper.OrdineMapper;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
@@ -13,15 +11,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 @Service @Transactional

@@ -3,8 +3,6 @@ package it.itsacademy.gestioneordinirestclient.dto;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.UUID;
 
 @Data
