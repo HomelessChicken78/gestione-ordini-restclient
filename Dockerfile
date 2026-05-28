@@ -30,9 +30,11 @@ ENTRYPOINT ["java", "-jar", "gestione-ordini.jar"]
 # Ogni container può essere collegato ad una rete Docker.
 
 # Docker mette a disposizione diversi driver di rete:
-# - bridge: È la rete di default di Docker. Crea una sottorete privata e isolata all'interno del tuo PC. Se crei una tua
-# rete bridge personalizzata (es. docker network create mia_rete), i container al suo interno possono comunicare tra loro
-# usando direttamente il loro nome (es. mysql-container) perché Docker fa da DNS automatico per risolverne gli IP.
+# - bridge: È il driver di rete di default di Docker, che crea una sottorete privata e isolata all'interno del tuo PC.
+# Nella rete bridge creata di default ("bridge") NON c'è risoluzione DNS automatica.
+# Tuttavia, se crei una tua rete bridge personalizzata (es. docker network create mia_rete),
+# i container al suo interno possono comunicare tra loro usando direttamente il loro nome
+# (es. mysql-container) perché Docker usa un DNS integrato per risolverne automaticamente gli IP.
 # - host (host.docker.internal): Rimuove del tutto l'isolamento di rete tra il container e la macchina che lo ospita.
 # Il container userà le stesse porte del tuo PC reale. Nota bene su "host.docker.internal": è un indirizzo speciale
 # (usato molto su Docker Desktop per Windows e Mac) che puoi scrivere DENTRO al container al posto di "localhost" per
@@ -40,3 +42,12 @@ ENTRYPOINT ["java", "-jar", "gestione-ordini.jar"]
 # - none: Disabilita completamente qualsiasi interfaccia di rete. Il container non avrà accesso a internet,
 # né alla rete locale, né agli altri container. È totalmente isolato dal mondo esterno.
 # Si usa raramente, di solito per container che devono fare elaborazioni sicure offline o task ultra-specifici senza bisogno di comunicare.
+
+# Siccome andremo a usare una rete possiamo fare
+# docker network create my-net
+
+# Per creare la rete. Poi connettere i container di my sql e rabbitmq alla network
+# docker network connect my-net mysql-container
+# docker network connect my-net rabbit1mq-container
+# Infine possiamo connettere anche il nostro container del microservizio:
+# docker network connect my-net gestione-ordini-container
