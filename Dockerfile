@@ -12,3 +12,5 @@ ENTRYPOINT ["java", "-jar", "/gestione-ordini.jar"]
 
 # docker build -t <username di docker hub>/<nome applicazione>:<versione> .
 # Serv e a creare un'immagine con l'username di docker hub, quel nome dell'applicazione e quella versione a partire da quel file
+# docker push <username di docker hub>/<nome applicazione>:<versione>
+# Pusha l'immagine su docker hub
