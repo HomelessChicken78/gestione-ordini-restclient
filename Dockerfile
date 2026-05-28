@@ -24,3 +24,19 @@ ENTRYPOINT ["java", "-jar", "gestione-ordini.jar"]
 # ma non esiste. Invece di quello dobbiamo dire: cerca l'url nell'altro container (dove si trova mysql).
 # Quindi facciamo
 # docker run -d --name gestione-ordini-container -p 8081:8080 -e DB_URL=jdbc:mysql://mysql-container:3306/esempio_db -e DB_USER=user -e DB_PASSWORD=my_password -e RABBITMQ_USERNAME=username_rabbitmq -e RABBITMQ_PASSWORD=password_rabbitmq <username di docker hub>/<nome applicazione>:<versione>
+
+# Per far comunicare tra loro più container (ad esempio la nostra app Spring Boot e MySQL),
+# Docker usa le network.
+# Ogni container può essere collegato ad una rete Docker.
+
+# Docker mette a disposizione diversi driver di rete:
+# - bridge: È la rete di default di Docker. Crea una sottorete privata e isolata all'interno del tuo PC. Se crei una tua
+# rete bridge personalizzata (es. docker network create mia_rete), i container al suo interno possono comunicare tra loro
+# usando direttamente il loro nome (es. mysql-container) perché Docker fa da DNS automatico per risolverne gli IP.
+# - host (host.docker.internal): Rimuove del tutto l'isolamento di rete tra il container e la macchina che lo ospita.
+# Il container userà le stesse porte del tuo PC reale. Nota bene su "host.docker.internal": è un indirizzo speciale
+# (usato molto su Docker Desktop per Windows e Mac) che puoi scrivere DENTRO al container al posto di "localhost" per
+# indicare al container di collegarsi a un servizio (es. un database) che sta girando direttamente sul tuo PC, fuori da Docker.
+# - none: Disabilita completamente qualsiasi interfaccia di rete. Il container non avrà accesso a internet,
+# né alla rete locale, né agli altri container. È totalmente isolato dal mondo esterno.
+# Si usa raramente, di solito per container che devono fare elaborazioni sicure offline o task ultra-specifici senza bisogno di comunicare.
