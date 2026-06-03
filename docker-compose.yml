@@ -22,6 +22,7 @@ services:
       - ordini-pagamenti
 
   ordini:
+    build: .
     image: homelesschicken/gestione-ordini:0.0.1
     container_name: gestione-ordini-container
     ports:
@@ -41,6 +42,7 @@ services:
       - amq-broker
 
   pagamenti:
+    build: ../gestione-pagamenti-restclient
     image: homelesschicken/gestione-pagamenti:0.0.2
     container_name: gestione-pagamenti-container
     ports:
