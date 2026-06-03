@@ -41,7 +41,7 @@ services:
       - amq-broker
 
   pagamenti:
-    image: homelesschicken/gestione-pagamenti:0.0.1
+    image: homelesschicken/gestione-pagamenti:0.0.2
     container_name: gestione-pagamenti-container
     ports:
       - "8082:8080"
