@@ -21,6 +21,20 @@ services:
     networks:
       - ordini-pagamenti
 
+  gateway:
+    build: ../ordini-e-pagamenti-gateway
+    image: homelesschicken/ordini-e-pagamenti-gateway:0.0.1
+    container_name: ordini-pagamenti-gateway-container
+    ports:
+      - "8080:8080"
+    environment:
+      - GESTIONE_ORDINI_HOST=gestione-ordini-container
+      - PATH_ORDINI=api/ordini
+      - GESTIONE_PAGAMENTI_HOST=gestione-pagamenti-container
+      - PATH_PAGAMENTI=api/pagamenti
+    networks:
+      - ordini-pagamenti
+
   ordini:
     build: .
     image: homelesschicken/gestione-ordini:0.0.1
