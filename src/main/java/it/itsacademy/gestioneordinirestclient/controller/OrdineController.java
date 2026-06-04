@@ -49,4 +49,7 @@ public class OrdineController {
     public Collection<PagamentoDTO> pagamentiDellOrdine(@PathVariable UUID idOrdine) {
         return ordineService.pagamentiDellOrdine(idOrdine);
     }
+
+    @GetMapping(path = "/health")
+    public void health() {}
 }
