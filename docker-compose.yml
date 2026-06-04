@@ -34,6 +34,15 @@ services:
       - PATH_PAGAMENTI=api/pagamenti
     networks:
       - ordini-pagamenti
+    depends_on:
+      ordini:
+        # Con questo diciamo a docker: avvia questo container SOLO dopo che sei sicuro che il container del servizio
+        # degli ordini sia "healthy" ovvero, nel nostro caso, dopo che il comando curl sia andato a buon fine.
+        # Se non lo mettessimo diremo a docker di avviare il gateway un istante (letteralmente pochissimi milllisecondi)
+        # dopo aver avviato gli ordini, fregandosene dell'esito.
+        condition: service_healthy
+      pagamenti:
+        condition: service_healthy
 
   ordini:
     build: .
@@ -54,6 +63,20 @@ services:
     depends_on:
       - db
       - amq-broker
+    # Healthcheck: quando il container viene tirato su, esegui questo comando all'interno del container stesso, per vedere
+    # che stia funzionando correttamente.
+    # NOTARE: Siccome siamo all'interno del container, possiamo usare la sua porta interna (8080) e non c'è bisogno
+    # ne di usare il DNS di docker ne di usare la porta mappata sul pc.
+    healthcheck:
+      # Usa curl. Curl è un programma da terminale per fare chiamate http, come postman. Il -f significa "dammi un errore
+      # se mi ritorna uno status code diverso da 2XX. In questo modo docker vede l'errore e capisce che è andato male il tentativo
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/ordini/health"]
+      # Esegui un tentativo (un comando) ogni 10 secondi
+      interval: 10s
+      # Il tentativo corrente è andato male se ci mette più di 5 secondi (per esempio il microservizio è spento e dunque non risponde)
+      timeout: 5s
+      # Massimo 5 tentativi. Dopodichè accettiamo che il container non sia "in salute"
+      retries: 5
 
   pagamenti:
     build: ../gestione-pagamenti-restclient
@@ -71,6 +94,11 @@ services:
     depends_on:
       - db
       - amq-broker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/pagamenti/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   ordini-pagamenti:
