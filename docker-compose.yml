@@ -32,6 +32,7 @@ services:
       - PATH_ORDINI=api/ordini
       - GESTIONE_PAGAMENTI_HOST=gestione-pagamenti-container
       - PATH_PAGAMENTI=api/pagamenti
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     networks:
       - ordini-pagamenti
     depends_on:
