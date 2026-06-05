@@ -23,7 +23,7 @@ services:
 
   gateway:
     build: ../ordini-e-pagamenti-gateway
-    image: homelesschicken/ordini-e-pagamenti-gateway:0.0.1
+    image: homelesschicken/ordini-e-pagamenti-gateway:0.0.2
     container_name: ordini-pagamenti-gateway-container
     ports:
       - "8080:8080"
