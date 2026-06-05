@@ -45,6 +45,21 @@ services:
       pagamenti:
         condition: service_healthy
 
+  auth:
+    build: ../ordini-e-pagamenti-auth
+    image: homelesschicken/ordini-e-pagamenti-auth:0.0.1
+    container_name: ordini-pagamenti-auth-container
+    ports:
+      - "8083:8080"
+    environment:
+      - DB_URL=jdbc:mysql://mysql-container:3306/ordini_e_pagamenti_db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - ordini-pagamenti
+    depends_on:
+      - db
+
   ordini:
     build: .
     image: homelesschicken/gestione-ordini:0.0.2
