@@ -35,6 +35,7 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - AUTH_HOST=ordini-pagamenti-auth-container
       - AUTH_PORT=8080
+      - PATH_AUTH=api/auth
     networks:
       - ordini-pagamenti
     depends_on:
