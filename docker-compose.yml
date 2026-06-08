@@ -55,6 +55,8 @@ services:
       - DB_URL=jdbc:mysql://mysql-container:3306/ordini_e_pagamenti_db
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_EXPIRATION_MILLIS=300000
     networks:
       - ordini-pagamenti
     depends_on:
