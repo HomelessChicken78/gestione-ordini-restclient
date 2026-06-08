@@ -34,7 +34,7 @@ services:
       - PATH_PAGAMENTI=api/pagamenti
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - AUTH_HOST=ordini-pagamenti-auth-container
-      - AUTH_PORT= 8080
+      - AUTH_PORT=8080
     networks:
       - ordini-pagamenti
     depends_on:
@@ -67,9 +67,9 @@ services:
       - db
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 1500ms
+      timeout: 1s
+      retries: 10
 
   ordini:
     build: .
@@ -99,11 +99,11 @@ services:
       # se mi ritorna uno status code diverso da 2XX. In questo modo docker vede l'errore e capisce che è andato male il tentativo
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/ordini/health"]
       # Esegui un tentativo (un comando) ogni 10 secondi
-      interval: 10s
+      interval: 1500ms
       # Il tentativo corrente è andato male se ci mette più di 5 secondi (per esempio il microservizio è spento e dunque non risponde)
-      timeout: 5s
+      timeout: 1s
       # Massimo 5 tentativi. Dopodichè accettiamo che il container non sia "in salute"
-      retries: 5
+      retries: 10
 
   pagamenti:
     build: ../gestione-pagamenti-restclient
@@ -123,9 +123,9 @@ services:
       - amq-broker
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/pagamenti/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 1500ms
+      timeout: 1s
+      retries: 10
 
 networks:
   ordini-pagamenti:
