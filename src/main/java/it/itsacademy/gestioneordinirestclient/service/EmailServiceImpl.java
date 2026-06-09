@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username}")
-    private final String sender;
-    private JavaMailSender mailSender;
+    private String sender;
+    private final JavaMailSender mailSender;
 
     @Override
     public void sendMail(String recipient, String subject, String text) {

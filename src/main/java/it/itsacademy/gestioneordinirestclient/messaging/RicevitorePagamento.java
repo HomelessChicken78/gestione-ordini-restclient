@@ -2,6 +2,7 @@ package it.itsacademy.gestioneordinirestclient.messaging;
 
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
+import it.itsacademy.gestioneordinirestclient.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RicevitorePagamento {
     private final RepositoryOrdine repositoryOrdine;
+    private final EmailService email;
 
     @RabbitListener(queues = {"payments.success.queue"})
     public void successfulPayment(UUID idOrdine) {
@@ -23,6 +25,8 @@ public class RicevitorePagamento {
         // NB: Non lanciamo eccezioni RabbitMQ penserebbe che ci sia stato un errore di elaborazione e rimetterebbe il messaggio in coda
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
+
+        email.sendOrderPaymentSuccessMail("its-ordini-e-pagamenti-cri@mailinator.com", ordine.getDescrizione());
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
     }
@@ -36,6 +40,8 @@ public class RicevitorePagamento {
         // NB: Non lanciamo eccezioni RabbitMQ penserebbe che ci sia stato un errore di elaborazione e rimetterebbe il messaggio in coda
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
+
+        email.sendOrderPaymentFailMail("its-ordini-e-pagamenti-cri@mailinator.com", ordine.getDescrizione());
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
     }
