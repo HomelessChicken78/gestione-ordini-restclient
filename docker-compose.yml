@@ -20,6 +20,13 @@ services:
     #  - "15672:15672"
     networks:
       - ordini-pagamenti
+    healthcheck:
+      # "rabbitmq-diagnostics -q ping" è il comando ufficiale raccomandato
+      # da RabbitMQ per verificare se il nodo è attivo e risponde.
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 3s
+      timeout: 2s
+      retries: 20
 
   gateway:
     build: ../ordini-e-pagamenti-gateway
@@ -91,8 +98,10 @@ services:
     networks:
       - ordini-pagamenti
     depends_on:
-      - db
-      - amq-broker
+      db:
+        condition: service_started
+      amq-broker:
+          condition: service_healthy
     # Healthcheck: quando il container viene tirato su, esegui questo comando all'interno del container stesso, per vedere
     # che stia funzionando correttamente.
     # NOTARE: Siccome siamo all'interno del container, possiamo usare la sua porta interna (8080) e non c'è bisogno
@@ -122,8 +131,10 @@ services:
     networks:
       - ordini-pagamenti
     depends_on:
-      - db
-      - amq-broker
+      db:
+        condition: service_started
+      amq-broker:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/pagamenti/health"]
       interval: 1500ms
