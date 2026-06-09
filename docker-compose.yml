@@ -135,6 +135,8 @@ services:
         condition: service_started
       amq-broker:
         condition: service_healthy
+      ordini:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/pagamenti/health"]
       interval: 1500ms
