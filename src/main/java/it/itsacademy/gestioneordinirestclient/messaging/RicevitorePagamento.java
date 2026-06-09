@@ -26,7 +26,7 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-        email.sendOrderPaymentSuccessMail("its-ordini-e-pagamenti-cri@mailinator.com", ordine.getDescrizione());
+        email.sendOrderPaymentSuccessMail(ordine.getIdOrdine(), "its-ordini-e-pagamenti-cri@mailinator.com", ordine.getDescrizione());
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
     }
@@ -41,7 +41,7 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-        email.sendOrderPaymentFailMail("its-ordini-e-pagamenti-cri@mailinator.com", ordine.getDescrizione());
+        email.sendOrderPaymentFailMail(ordine.getIdOrdine(), "its-ordini-e-pagamenti-cri@mailinator.net", ordine.getDescrizione());
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
     }
