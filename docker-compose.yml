@@ -86,6 +86,8 @@ services:
       - RABBITMQ_HOST=rabbit-mq-container
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     networks:
       - ordini-pagamenti
     depends_on:
