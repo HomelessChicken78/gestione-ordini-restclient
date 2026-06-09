@@ -74,7 +74,7 @@ services:
 
   ordini:
     build: .
-    image: homelesschicken/gestione-ordini:0.0.2
+    image: homelesschicken/gestione-ordini:0.0.3
     container_name: gestione-ordini-container
     ports:
       - "8081:8080"
