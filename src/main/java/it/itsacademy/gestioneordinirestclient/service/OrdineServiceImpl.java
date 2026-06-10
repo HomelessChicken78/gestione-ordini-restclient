@@ -1,7 +1,7 @@
 package it.itsacademy.gestioneordinirestclient.service;
 
 import it.itsacademy.gestioneordinirestclient.dto.*;
-import it.itsacademy.gestioneordinirestclient.exception.ConflictException;
+import it.itsacademy.gestioneordinirestclient.exception.*;
 import it.itsacademy.gestioneordinirestclient.exception.dto.GeneralErrorResponseDTO;
 import it.itsacademy.gestioneordinirestclient.mapper.OrdineMapper;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
@@ -96,7 +96,10 @@ public class OrdineServiceImpl implements OrdineService {
                             e.getResponseBodyAsString(), // Questo contiene una stringa che contiene tutto il json
                             GeneralErrorResponseDTO.class // Questo dice all'API di convertire quel json nella nostra classe
                     );
-            throw new RuntimeException("Unknown error.");
+            if (errorResponse.getStatus() == 402) throw new PaymentRequiredException(errorResponse.getMessage());
+            else if (errorResponse.getStatus() == 404) throw new NotFoundException(errorResponse.getMessage());
+            else if (errorResponse.getStatus() == 409) throw new ConflictException(errorResponse.getMessage());
+            else throw new RuntimeException(errorResponse.getMessage());
         }
     }
 
