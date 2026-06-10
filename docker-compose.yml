@@ -59,7 +59,7 @@ services:
 
   auth:
     build: ../ordini-e-pagamenti-auth
-    image: homelesschicken/ordini-e-pagamenti-auth:0.0.1
+    image: homelesschicken/ordini-e-pagamenti-auth:0.0.2
     container_name: ordini-pagamenti-auth-container
     #ports:
     #  - "8083:8080"
