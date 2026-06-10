@@ -4,14 +4,16 @@ import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
 import it.itsacademy.gestioneordinirestclient.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Component @Transactional
-@RequiredArgsConstructor
+@RequiredArgsConstructor @Slf4j
 public class RicevitorePagamento {
     private final RepositoryOrdine repositoryOrdine;
     private final EmailService email;
@@ -26,7 +28,11 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-        email.sendOrderPaymentSuccessMail(ordine.getIdOrdine(), "its-ordini-e-pagamenti-cri@mailinator.com", ordine.getDescrizione());
+        try {
+            email.sendOrderPaymentSuccessMail(ordine.getIdOrdine(), ordine.getEmailCliente(), ordine.getDescrizione());
+        } catch (MailException e) {
+            log.error(e.getMessage());
+        }
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
     }
@@ -41,7 +47,11 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-        email.sendOrderPaymentFailMail(ordine.getIdOrdine(), "its-ordini-e-pagamenti-cri@mailinator.net", ordine.getDescrizione());
+        try {
+            email.sendOrderPaymentFailMail(ordine.getIdOrdine(), ordine.getEmailCliente(), ordine.getDescrizione());
+        } catch (MailException e) {
+            log.error(e.getMessage());
+        }
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
     }

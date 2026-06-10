@@ -31,9 +31,30 @@ public class OrdineServiceImpl implements OrdineService {
     @Value("${api.gestione-pagamenti.url}")
     private String gestionePagamentiUrl;
 
+    @Value("${api.auth.url}")
+    private String authUrl;
+
     @Override
-    public OrdineDTO creaOrdine(CreaOrdineDTO nuovoOrdine) {
+    public OrdineDTO creaOrdine(CreaOrdineDTO nuovoOrdine, String username) {
+        UtenteDTO utente;
+        try {
+            utente = restClient.get()
+                    .uri(authUrl + "/" + username)
+                    .retrieve()
+                    .body(UtenteDTO.class);
+        } catch (HttpClientErrorException e) {
+            GeneralErrorResponseDTO errorResponse = objectMapper.readValue(
+                    e.getResponseBodyAsString(),
+                    GeneralErrorResponseDTO.class
+            );
+            if (errorResponse.getStatus() == 402) throw new PaymentRequiredException(errorResponse.getMessage());
+            else if (errorResponse.getStatus() == 404) throw new NotFoundException(errorResponse.getMessage());
+            else if (errorResponse.getStatus() == 409) throw new ConflictException(errorResponse.getMessage());
+            else throw new RuntimeException(errorResponse.getMessage());
+        }
         Ordine daCreare = mapper.toEntity(nuovoOrdine);
+        daCreare.setUsernameCliente(username);
+        daCreare.setEmailCliente(utente.getEmail());
 
         Ordine salvato = repositoryOrdine.save(daCreare);
 

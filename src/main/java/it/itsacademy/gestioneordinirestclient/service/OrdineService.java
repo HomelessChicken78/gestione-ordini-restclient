@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 public interface OrdineService {
-    OrdineDTO creaOrdine(CreaOrdineDTO nuovoOrdine);
+    OrdineDTO creaOrdine(CreaOrdineDTO nuovoOrdine, String username);
 
     OrdineDTO pagaOrdine(UUID idOrdine);
 

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -20,8 +21,9 @@ public class OrdineController {
 
     @PostMapping(consumes = json, produces = json)
     @ResponseStatus(HttpStatus.CREATED)
-    public OrdineDTO creaOrdine(@RequestBody CreaOrdineDTO nuovoOrdine) {
-        return ordineService.creaOrdine(nuovoOrdine);
+    public OrdineDTO creaOrdine(@RequestBody CreaOrdineDTO nuovoOrdine, @RequestHeader("X-Authenticated-User") String authHeader) {
+        // NB: Principal è auto-iniettato da spring
+        return ordineService.creaOrdine(nuovoOrdine, authHeader);
     }
 
     @PatchMapping(path = "/{idOrdine}/paga", produces = json)
