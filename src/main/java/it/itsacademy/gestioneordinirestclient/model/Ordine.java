@@ -19,6 +19,9 @@ public class Ordine {
     private StatoOrdine statoOrdine = StatoOrdine.DA_PAGARE;
     private Double totale;
 
+    @Column(nullable = false) private String usernameCliente;
+    @Column(nullable = false) private String emailCliente;
+
     public enum StatoOrdine {
         DA_PAGARE, PAGATO, ELIMINATO,
         IN_ELABORAZIONE // Stato temporaneo usato quando l'altro microservizio elabora la nostra richiesta di pagamento
