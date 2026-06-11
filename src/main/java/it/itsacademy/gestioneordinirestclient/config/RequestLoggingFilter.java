@@ -24,10 +24,11 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         if (uri.startsWith("/api/ordini/health")) return;
 
         log.info(
-                "{} {} -> status={}",
+                "{} {} -> status={} | user={}",
                 request.getMethod(),
                 uri,
-                response.getStatus()
+                response.getStatus(),
+                request.getHeader("X-Authenticated-User")
         );
     }
 }

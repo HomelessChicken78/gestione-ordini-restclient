@@ -27,53 +27,47 @@ public class OrdineController {
     public OrdineDTO creaOrdine(@RequestBody CreaOrdineDTO nuovoOrdine, @RequestHeader("X-Authenticated-User") String authHeader) {
         // NB: Principal è auto-iniettato da spring
         OrdineDTO newOrder = ordineService.creaOrdine(nuovoOrdine, authHeader);
-        log.info("Order with id={} created by user={}",
-                newOrder.getIdOrdine(),
-                authHeader);
+        log.info("Order with id={} created",
+                newOrder.getIdOrdine());
         return newOrder;
     }
 
     @PatchMapping(path = "/{idOrdine}/paga", produces = json)
-    public OrdineDTO pagaOrdine(@PathVariable UUID idOrdine, @RequestHeader("X-Authenticated-User") String authHeader) {
+    public OrdineDTO pagaOrdine(@PathVariable UUID idOrdine) {
         OrdineDTO paidOrder = ordineService.pagaOrdine(idOrdine);
-        log.info("Order with id={} paid by user={}",
-                paidOrder.getIdOrdine(),
-                authHeader);
+        log.info("Order with id={} paid",
+                paidOrder.getIdOrdine());
         return paidOrder;
     }
 
     @GetMapping(path = "/{idOrdine}", produces = json)
-    public OrdineDTO cercaOrdine(@PathVariable UUID idOrdine, @RequestHeader("X-Authenticated-User") String authHeader) {
+    public OrdineDTO cercaOrdine(@PathVariable UUID idOrdine) {
         OrdineDTO searchedOrder = ordineService.cercaOrdine(idOrdine);
-        log.info("Order lookup with id={} by user={}",
-                searchedOrder.getIdOrdine(),
-                authHeader);
+        log.info("Order lookup with id={}",
+                searchedOrder.getIdOrdine());
         return searchedOrder;
     }
 
     @GetMapping(produces = json)
-    public Collection<OrdineDTO> cercaTutti(@RequestHeader("X-Authenticated-User") String authHeader) {
+    public Collection<OrdineDTO> cercaTutti() {
         Collection<OrdineDTO> allOrders = ordineService.cercaTutti();
-        log.info("Order list from user={}",
-                authHeader);
+        log.info("Order listed");
         return allOrders;
     }
 
     @DeleteMapping(path = "/{idOrdine}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void cancellaOrdine(@PathVariable UUID idOrdine, @RequestHeader("X-Authenticated-User") String authHeader) {
+    public void cancellaOrdine(@PathVariable UUID idOrdine) {
         ordineService.cancellaOrdine(idOrdine);
-        log.info("Order with id={} deletion from user={}",
-                idOrdine,
-                authHeader);
+        log.info("Order with id={} deleted",
+                idOrdine);
     }
 
     @GetMapping(path = "/{idOrdine}/pagamenti", produces = json)
-    public Collection<PagamentoDTO> pagamentiDellOrdine(@PathVariable UUID idOrdine, @RequestHeader("X-Authenticated-User") String authHeader) {
+    public Collection<PagamentoDTO> pagamentiDellOrdine(@PathVariable UUID idOrdine) {
         Collection<PagamentoDTO> paymentsOfOrder = ordineService.pagamentiDellOrdine(idOrdine);
-        log.info("Order payments search for order with id={} by user={}",
-                idOrdine,
-                authHeader);
+        log.info("Order payments search for order with id={}",
+                idOrdine);
         return paymentsOfOrder;
     }
 
