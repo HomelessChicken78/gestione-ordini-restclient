@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <!-- Gli appenders definiscono dove i log devono essere messi -->
+    <Appenders>
+
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <!-- Definiamo un pattern layout, ovvero un pattern che il messaggio dovrà seguire:
+                - %d{yyyy-MM-dd HH:mm:ss} indica la data e l'ora attuale in formato yyyy-MM-dd HH:mm:ss
+                - %-5level indica il livello (spiegazione dopo)
+                - %logger nome del logger che ha generato quel log. Di solito la classe java da dove origina il log
+                - %msg il messaggio del log
+                - %n è una nuova linea (corrisponde a \n)
+             -->
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5level %logger - %msg%n"/>
+        </Console>
+    </Appenders>
+
+        <!-- Indicano i logger (come dei filtri) che devono attraversare i log. Per capirlo meglio, dobbiamo prima capire che esistono
+         5 tipi di log, ognuno con un ordine di importanza. Qui vengono riportati dal più importante al meno:
+         - ERROR: errori gravi che compromettono il funzionamento dell'applicazione o di una sua parte
+         - WARN: situazioni potenzialmente problematiche, non bloccanti ma da tenere sotto controllo
+         - INFO: informazioni generali sul normale funzionamento dell'applicazione
+         - DEBUG: informazioni dettagliate utili per il debugging in fase di sviluppo
+         - TRACE: livello più dettagliato in assoluto, usato per tracciare ogni singolo passo dell'esecuzione
+         Quando un log viene scritto, prima questo attraversa tutti i logger. Ogni logger definisce un livello minimo:
+         tutti i log più importanti di quello indicato passano quel logger, il resto vengono "bloccati" e non vengono scritti
+         (non lanciano nessuna eccezione). Ad esempio un logger "WARN" significa che farà passare solo log di tipo WARN ed ERROR,
+         ma non un log di tipo INFO.
+         -->
+        <Loggers>
+            <!-- Questo significa: se la classe è del pacchetto service, deve essere almeno debug per passare questo logger -->
+            <Logger name="it.itsacademy.gestioneordinirestclient.service" level="debug"/>
+
+            <!-- Questo significa: qualsiasi log deve essere almeno del livello definito nella proprietà log.root.level
+             (o se non esiste/è vuota quella proprietà almeno INFO). Dunque se log.root.level=WARN, verranno ammessi solo log
+             di tipo WARN ed ERROR, rendendo inutile il filtro sopra (ciò permette di attivare però una modalità "debug") -->
+            <Root level="${log.root.level:-INFO}">
+                <!-- Usa la console per questi. I logger che non definiscono questa proprietà useranno questa di default -->
+                <AppenderRef ref="CONSOLE"/>
+            </Root>
+        </Loggers>
+</Configuration>
