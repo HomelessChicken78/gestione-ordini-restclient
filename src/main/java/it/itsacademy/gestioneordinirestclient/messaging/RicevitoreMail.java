@@ -5,8 +5,6 @@ import it.itsacademy.gestioneordinirestclient.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 
-import java.util.UUID;
-
 @RequiredArgsConstructor
 public class RicevitoreMail {
     private final EmailService email;
