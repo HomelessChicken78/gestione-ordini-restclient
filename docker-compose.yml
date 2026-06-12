@@ -96,6 +96,7 @@ services:
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
+      #- LOG_ROOT_LEVEL=DEBUG
     networks:
       - ordini-pagamenti
     depends_on:
