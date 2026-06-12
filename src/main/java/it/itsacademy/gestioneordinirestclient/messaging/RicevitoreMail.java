@@ -1,6 +1,5 @@
 package it.itsacademy.gestioneordinirestclient.messaging;
 
-import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
