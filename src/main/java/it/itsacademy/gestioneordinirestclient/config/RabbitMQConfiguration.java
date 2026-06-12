@@ -34,8 +34,8 @@ public class RabbitMQConfiguration {
         return new Queue("payments.failure.queue", true);
     }
 
-    @Bean Queue queueEmailSend() {
-        return new Queue("email.send.queue", true);
+    @Bean Queue queuePaymentSuccessEmail() {
+        return new Queue("payment.success.email", true);
     }
 
     /*
@@ -104,10 +104,10 @@ public class RabbitMQConfiguration {
     }
 
     @Bean
-    public Binding emailSendBinding(Queue queueEmailSend, Exchange exchange) {
-        return BindingBuilder.bind(queueEmailSend)
+    public Binding emailSendBinding(Queue queuePaymentSuccessEmail, Exchange exchange) {
+        return BindingBuilder.bind(queuePaymentSuccessEmail)
                 .to(exchange)
-                .with("email.send")
+                .with("email.payment.success")
                 .noargs();
     }
 }
