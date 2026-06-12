@@ -38,6 +38,10 @@ public class RabbitMQConfiguration {
         return new Queue("payment.success.email", true);
     }
 
+    @Bean Queue queuePaymentFailureEmail() {
+        return new Queue("payment.failure.email", true);
+    }
+
     /*
      * Definisce un Exchange di tipo "Direct".
      * In RabbitMQ, i produttori non inviano mai messaggi direttamente alle code,
@@ -107,7 +111,14 @@ public class RabbitMQConfiguration {
     public Binding paymentSuccessEmailBinding(Queue queuePaymentSuccessEmail, Exchange exchange) {
         return BindingBuilder.bind(queuePaymentSuccessEmail)
                 .to(exchange)
-                .with("email.payment.success")
+                .with("email.payment.accettato")
+                .noargs();
+    }
+
+    @Bean Binding paymentFailureEmailBinding(Queue queuePaymentFailureEmail, Exchange exchange) {
+        return BindingBuilder.bind(queuePaymentFailureEmail)
+                .to(exchange)
+                .with("email.payment.rifiutato")
                 .noargs();
     }
 }
