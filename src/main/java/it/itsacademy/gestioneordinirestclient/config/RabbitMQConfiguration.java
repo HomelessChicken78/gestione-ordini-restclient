@@ -104,7 +104,7 @@ public class RabbitMQConfiguration {
     }
 
     @Bean
-    public Binding emailSendBinding(Queue queuePaymentSuccessEmail, Exchange exchange) {
+    public Binding paymentSuccessEmailBinding(Queue queuePaymentSuccessEmail, Exchange exchange) {
         return BindingBuilder.bind(queuePaymentSuccessEmail)
                 .to(exchange)
                 .with("email.payment.success")
