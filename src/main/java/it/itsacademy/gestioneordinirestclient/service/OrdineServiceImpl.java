@@ -43,15 +43,19 @@ public class OrdineServiceImpl implements OrdineService {
             String uri = authUrl + "/" + username;
             log.debug("Calling auth service. uri={}", uri);
             utente = restClient.get()
-                    .uri(uri)
+                    .uri(authUrl + "/{username}", username)
                     .retrieve()
                     .body(UtenteDTO.class);
             log.trace("Retrieved user username={}, email={}",
                     utente.getUsername(),
                     utente.getEmail());
         } catch (HttpClientErrorException e) {
+            String responseBody = e.getResponseBodyAsString();
+            if (responseBody == null || responseBody.isBlank())
+                throw new RuntimeException("Comunication error with Auth service: " + e.getMessage());
+
             GeneralErrorResponseDTO errorResponse = objectMapper.readValue(
-                    e.getResponseBodyAsString(),
+                    responseBody,
                     GeneralErrorResponseDTO.class
             );
             log.warn("The uri threw an exception. status={}, message={}", errorResponse.getStatus(), errorResponse.getMessage());
@@ -127,14 +131,17 @@ public class OrdineServiceImpl implements OrdineService {
             String uri = gestionePagamentiUrl + "/pagamenti/" + idOrdine;
             log.debug("Calling payments service. uri={}", uri);
             return restClient.get()
-                .uri(uri)
+                .uri(gestionePagamentiUrl + "/pagamenti/{idOrdine}", idOrdine)
                 .retrieve()
                 .body(new ParameterizedTypeReference<Collection<PagamentoDTO>>() {});
         } catch (HttpClientErrorException e) {
+            String responseBody = e.getResponseBodyAsString();
+            if (responseBody == null || responseBody.isBlank())
+                throw new RuntimeException("Comunication error with Auth service: " + e.getMessage());
             GeneralErrorResponseDTO errorResponse =
                     // Questo metodo serve a trasformare il json di ritorno in una classe java
                     objectMapper.readValue(
-                            e.getResponseBodyAsString(), // Questo contiene una stringa che contiene tutto il json
+                            responseBody, // Questo contiene una stringa che contiene tutto il json
                             GeneralErrorResponseDTO.class // Questo dice all'API di convertire quel json nella nostra classe
                     );
             log.warn("The uri threw an exception. status={}, message={}", errorResponse.getStatus(), errorResponse.getMessage());
