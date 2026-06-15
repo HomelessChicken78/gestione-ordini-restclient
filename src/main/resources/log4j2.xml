@@ -3,16 +3,36 @@
     <!-- Gli appenders definiscono dove i log devono essere messi -->
     <Appenders>
 
-        <Console name="CONSOLE" target="SYSTEM_OUT">
-            <!-- Definiamo un pattern layout, ovvero un pattern che il messaggio dovrà seguire:
+        <!--<Console name="CONSOLE" target="SYSTEM_OUT">
+            <!- Definiamo un pattern layout, ovvero un pattern che il messaggio dovrà seguire:
                 - %d{yyyy-MM-dd HH:mm:ss} indica la data e l'ora attuale in formato yyyy-MM-dd HH:mm:ss
                 - %-5level indica il livello (spiegazione dopo)
                 - %logger nome del logger che ha generato quel log. Di solito la classe java da dove origina il log
                 - %msg il messaggio del log
                 - %n è una nuova linea (corrisponde a \n)
-             -->
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5level %logger - %msg%n"/>
         </Console>
+        -->
+        <!-- Scrive su un file principale e, al verificarsi di certe condizioni (Policies),
+        sposta i log vecchi in un archivio storico (Rollover) liberando il file principale.-->
+        <RollingFile name="LOKI_FILE" fileName="logs/app-loki.log" filePattern="logs/app-loki-%d{yyyy-MM-dd}-%i.log.gz">
+            <!-- Invece di scrivere testo, trasforma ogni riga log in un JSON . Questo permette a Loki e Grafana di
+            leggere, filtrare e indicizzare i campi in automatico.-->
+            <JsonTemplateLayout eventTemplateUri="classpath:EcsLayout.json"/>
+
+            <!-- Quando archiviare i file. Se ce ne sono di più, il file di log cambia quando una capita. -->
+            <Policies>
+                <!-- Guarda il formato inserito nel filePattern. Visto che c'è '%d{yyyy-MM-dd}' (che cambia ogni giorno),
+                questa policy farà scattare la rotazione dei log automaticamente ogni notte a mezzanotte.-->
+                <TimeBasedTriggeringPolicy />
+                <!-- Se il file attivo (app-loki.log) diventa troppo pesante prima della mezzanotte,
+                viene archiviato per evitare di saturare il disco.-->
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+
+            <!-- Quanti file archiviati tenere. Al file 11, il più vecchio di verrà eliminato automaticamente.-->
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
     </Appenders>
 
         <!-- Indicano i logger (come dei filtri) che devono attraversare i log. Per capirlo meglio, dobbiamo prima capire che esistono
