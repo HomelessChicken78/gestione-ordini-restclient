@@ -3,22 +3,22 @@
     <!-- Gli appenders definiscono dove i log devono essere messi -->
     <Appenders>
 
-        <!--<Console name="CONSOLE" target="SYSTEM_OUT">
-            <!- Definiamo un pattern layout, ovvero un pattern che il messaggio dovrà seguire:
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <!-- Definiamo un pattern layout, ovvero un pattern che il messaggio dovrà seguire:
                 - %d{yyyy-MM-dd HH:mm:ss} indica la data e l'ora attuale in formato yyyy-MM-dd HH:mm:ss
                 - %-5level indica il livello (spiegazione dopo)
                 - %logger nome del logger che ha generato quel log. Di solito la classe java da dove origina il log
                 - %msg il messaggio del log
-                - %n è una nuova linea (corrisponde a \n)
+                - %n è una nuova linea (corrisponde a \n) -->
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5level %logger - %msg%n"/>
         </Console>
-        -->
+
         <!-- Scrive su un file principale e, al verificarsi di certe condizioni (Policies),
         sposta i log vecchi in un archivio storico (Rollover) liberando il file principale.-->
         <RollingFile name="LOKI_FILE" fileName="logs/app-loki.log" filePattern="logs/app-loki-%d{yyyy-MM-dd}-%i.log.gz">
             <!-- Invece di scrivere testo, trasforma ogni riga log in un JSON . Questo permette a Loki e Grafana di
             leggere, filtrare e indicizzare i campi in automatico.-->
-            <JsonTemplateLayout eventTemplateUri="classpath:EcsLayout.json"/>
+            <JsonTemplateLayout compact="true" eventEol="true" properties="true"/>
 
             <!-- Quando archiviare i file. Se ce ne sono di più, il file di log cambia quando una capita. -->
             <Policies>
@@ -57,6 +57,8 @@
             <Root level="${log.root.level:-INFO}">
                 <!-- Usa la console per questi. I logger che non definiscono questa proprietà useranno questa di default -->
                 <AppenderRef ref="CONSOLE"/>
+
+                <AppenderRef ref="LOKI_FILE"/>
             </Root>
         </Loggers>
 </Configuration>
