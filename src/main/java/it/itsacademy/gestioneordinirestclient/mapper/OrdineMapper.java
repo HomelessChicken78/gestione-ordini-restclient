@@ -14,6 +14,7 @@ public interface OrdineMapper {
     @Mapping(target = "statoOrdine", ignore = true)
     @Mapping(target = "usernameCliente", ignore = true)
     @Mapping(target = "emailCliente", ignore = true)
+    @Mapping(target = "nomeRicevuta", ignore = true)
     Ordine toEntity(CreaOrdineDTO nuovoOrdine);
 
     OrdineDTO toDTO(Ordine entity);

@@ -43,6 +43,9 @@ public class RicevitorePagamento {
             log.info("Sending receipt. file_name={}, message={}", fileName, receiptMsg);
             writer.write(receiptMsg);
             log.debug("Written on file");
+
+            ordine.setNomeRicevuta(fileName);
+            log.debug("Set value for \"nomeRicevuta\" of order. nomeRicevuta={}, orderId={}", ordine.getNomeRicevuta(), ordine.getIdOrdine());
         } catch (IOException e) {
             log.error("Error writing on the file.", e);
             throw e;

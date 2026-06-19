@@ -13,6 +13,7 @@ public class OrdineDTO {
     private String descrizione;
     private StatoOrdine statoOrdine;
     private Double totale;
+    private String nomeRicevuta;
 
     public enum StatoOrdine {
         DA_PAGARE, PAGATO, ELIMINATO,
