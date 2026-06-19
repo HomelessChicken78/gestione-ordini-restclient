@@ -2,6 +2,7 @@ package it.itsacademy.gestioneordinirestclient.messaging;
 
 import it.itsacademy.gestioneordinirestclient.dto.OrderPaymentEmailEvent;
 import it.itsacademy.gestioneordinirestclient.exception.NotFoundException;
+import it.itsacademy.gestioneordinirestclient.mapper.OrdineMapper;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
 import lombok.RequiredArgsConstructor;
@@ -34,22 +35,7 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-        String fileName = "RICEVUTA_" + now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt";
-
-        try (var writer = Files.newBufferedWriter(Path.of("/app/ricevute/" + fileName))) {
-            String receiptMsg = "L'utente " + ordine.getUsernameCliente()
-                    + " in data " + now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                    + " ha pagato " + ordine.getTotale() + "€";
-            log.info("Sending receipt. file_name={}, message={}", fileName, receiptMsg);
-            writer.write(receiptMsg);
-            log.debug("Written on file");
-
-            ordine.setNomeRicevuta(fileName);
-            log.debug("Set value for \"nomeRicevuta\" of order. nomeRicevuta={}, orderId={}", ordine.getNomeRicevuta(), ordine.getIdOrdine());
-        } catch (IOException e) {
-            log.error("Error writing on the file.", e);
-            throw e;
-        }
+       rabbitTemplate.convertAndSend("receipts.exchange", "receipts.file.create", idOrdine);
 
         rabbitTemplate.convertAndSend("payments.exchange", "email.payment.accettato",
                 new OrderPaymentEmailEvent(ordine.getIdOrdine(), ordine.getEmailCliente(), ordine.getDescrizione()));
