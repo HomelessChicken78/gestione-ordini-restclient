@@ -32,7 +32,9 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-        try (var writer = Files.newBufferedWriter(Path.of("/app/ricevute/ricevuta.txt"))) {
+        String fileName = "RICEVUTA_" + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt";
+
+        try (var writer = Files.newBufferedWriter(Path.of("/app/ricevute/" + fileName))) {
             writer.write("Bell'ordine bro");
             log.debug("Written on file");
         } catch (IOException e) {
