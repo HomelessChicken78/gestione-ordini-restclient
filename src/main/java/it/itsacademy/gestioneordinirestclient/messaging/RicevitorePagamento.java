@@ -11,6 +11,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 
 @Component @Transactional
@@ -20,7 +23,7 @@ public class RicevitorePagamento {
     private final RabbitTemplate rabbitTemplate;
 
     @RabbitListener(queues = {"payments.success.queue"})
-    public void successfulPayment(UUID idOrdine) {
+    public void successfulPayment(UUID idOrdine) throws IOException  {
         Ordine ordine = findByIdOrLogAndThrow(idOrdine);
 
         // Per sicurezza controlliamo che lo stato sia in elaborazione.
@@ -28,6 +31,14 @@ public class RicevitorePagamento {
         // NB: Non lanciamo eccezioni RabbitMQ penserebbe che ci sia stato un errore di elaborazione e rimetterebbe il messaggio in coda
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
+
+        try (var writer = Files.newBufferedWriter(Path.of("/app/ricevute/ricevuta.txt"))) {
+            writer.write("Bell'ordine bro");
+            log.debug("Written on file");
+        } catch (IOException e) {
+            log.error("Error writing on the file.", e);
+            throw e;
+        }
 
         rabbitTemplate.convertAndSend("payments.exchange", "email.payment.accettato",
                 new OrderPaymentEmailEvent(ordine.getIdOrdine(), ordine.getEmailCliente(), ordine.getDescrizione()));
