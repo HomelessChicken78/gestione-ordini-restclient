@@ -2,7 +2,6 @@ package it.itsacademy.gestioneordinirestclient.messaging;
 
 import it.itsacademy.gestioneordinirestclient.dto.OrderPaymentEmailEvent;
 import it.itsacademy.gestioneordinirestclient.exception.NotFoundException;
-import it.itsacademy.gestioneordinirestclient.mapper.OrdineMapper;
 import it.itsacademy.gestioneordinirestclient.model.Ordine;
 import it.itsacademy.gestioneordinirestclient.repository.RepositoryOrdine;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +10,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import static java.time.LocalDateTime.now;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Component @Transactional
@@ -26,7 +20,7 @@ public class RicevitorePagamento {
     private final RabbitTemplate rabbitTemplate;
 
     @RabbitListener(queues = {"payments.success.queue"})
-    public void successfulPayment(UUID idOrdine) throws IOException  {
+    public void successfulPayment(UUID idOrdine)  {
         Ordine ordine = findByIdOrLogAndThrow(idOrdine);
 
         // Per sicurezza controlliamo che lo stato sia in elaborazione.
