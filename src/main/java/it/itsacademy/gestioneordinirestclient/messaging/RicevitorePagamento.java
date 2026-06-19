@@ -10,10 +10,12 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import static java.time.LocalDateTime.now;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Component @Transactional
@@ -32,10 +34,14 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-        String fileName = "RICEVUTA_" + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt";
+        String fileName = "RICEVUTA_" + now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt";
 
         try (var writer = Files.newBufferedWriter(Path.of("/app/ricevute/" + fileName))) {
-            writer.write("Bell'ordine bro");
+            String receiptMsg = "L'utente " + ordine.getUsernameCliente()
+                    + " in data " + now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    + " ha pagato " + ordine.getTotale() + "€";
+            log.info("Sending receipt. file_name={}, message={}", fileName, receiptMsg);
+            writer.write(receiptMsg);
             log.debug("Written on file");
         } catch (IOException e) {
             log.error("Error writing on the file.", e);
