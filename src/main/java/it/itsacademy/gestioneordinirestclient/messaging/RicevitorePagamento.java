@@ -29,7 +29,8 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
-       rabbitTemplate.convertAndSend("receipts.exchange", "receipts.file.create", idOrdine);
+        rabbitTemplate.convertAndSend("receipts.exchange", "receipts.file.create", idOrdine);
+        rabbitTemplate.convertAndSend("receipts.exchange", "receipts.pdf.create", idOrdine);
 
         rabbitTemplate.convertAndSend("payments.exchange", "email.payment.accettato",
                 new OrderPaymentEmailEvent(ordine.getIdOrdine(), ordine.getEmailCliente(), ordine.getDescrizione()));

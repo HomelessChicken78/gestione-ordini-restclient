@@ -60,6 +60,11 @@ public class RicevitoreRicevute {
             log.error("Error writing on the file.", e);
             throw e;
         }
+    }
+
+    @RabbitListener(queues = {"receipts.pdf.queue"})
+    public void createReceiptPdf(UUID idOrdine) throws IOException {
+        Ordine ordine = findByIdOrLogAndThrow(idOrdine);
 
         String reportFileName = "REPORT_" + now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 

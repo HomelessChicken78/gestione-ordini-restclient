@@ -46,6 +46,10 @@ public class RabbitMQConfiguration {
         return new Queue("receipts.file.queue");
     }
 
+    @Bean Queue queueReport() {
+        return new Queue("receipts.pdf.queue");
+    }
+
     /*
      * Definisce un Exchange di tipo "Direct".
      * In RabbitMQ, i produttori non inviano mai messaggi direttamente alle code,
@@ -135,6 +139,13 @@ public class RabbitMQConfiguration {
         return BindingBuilder.bind(queueReceipts)
                 .to(exchangeRicevute)
                 .with("receipts.file.create")
+                .noargs();
+    }
+
+    @Bean Binding sendReportBinding(Queue queueReport, Exchange exchangeRicevute) {
+        return BindingBuilder.bind(queueReport)
+                .to(exchangeRicevute)
+                .with("receipts.pdf.create")
                 .noargs();
     }
 }
