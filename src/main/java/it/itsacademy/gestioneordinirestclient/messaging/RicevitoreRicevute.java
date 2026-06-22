@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.util.JRSaver;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -37,8 +35,6 @@ public class RicevitoreRicevute {
     @Value("${reports.template.filename}")
     private String jasperTemplateFile;
 
-    private final SessionFactory sessionFactory;
-
     @RabbitListener(queues = {"receipts.file.queue"})
     public void createReceiptFile(UUID idOrdine) throws IOException {
         Ordine ordine = findByIdOrLogAndThrow(idOrdine);
@@ -63,7 +59,7 @@ public class RicevitoreRicevute {
     }
 
     @RabbitListener(queues = {"receipts.pdf.queue"})
-    public void createReceiptPdf(UUID idOrdine) throws IOException {
+    public void createReceiptPdf(UUID idOrdine) throws IOException, JRException {
         Ordine ordine = findByIdOrLogAndThrow(idOrdine);
 
         String reportFileName = "REPORT_" + now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
@@ -76,10 +72,14 @@ public class RicevitoreRicevute {
             JRSaver.saveObject(report, jasperTemplateDir + jasperTemplateFile + ".jasper");
             log.trace("Saved .jasper file.");
 
-            InputStream fileLogo = new FileInputStream(jasperTemplateDir + "logo.png");
-
             Map<String, Object> params = new HashMap<>();
-            params.put("logo", fileLogo);
+
+            try (InputStream fileLogo = new FileInputStream(jasperTemplateDir + "logo.png")) {
+                params.put("logo", fileLogo);
+            } catch (IOException e) {
+                log.error("Error finding logo file", e);
+                throw e;
+            }
             params.put("idOrdine", ordine.getIdOrdine().toString());
             params.put("dataCreazione", now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
             params.put("cliente", ordine.getUsernameCliente() + " (" + ordine.getEmailCliente() + ")");
@@ -89,10 +89,9 @@ public class RicevitoreRicevute {
             JasperPrint print = JasperFillManager.fillReport(report, params, new net.sf.jasperreports.engine.JREmptyDataSource());
 
             JasperExportManager.exportReportToPdfFile(print, "/app/ricevute/" + reportFileName + ".pdf");
-            JasperExportManager.exportReportToPdfFile(print, "/app/ricevute/" + reportFileName + ".pdf");
         } catch (JRException e) {
             log.error("Error creating report.", e);
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 
