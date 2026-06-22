@@ -14,6 +14,8 @@
               whenNoDataType="AllSectionsNoDetail"
               uuid="c2b3a7d0-0000-0000-0000-000000000001">
 
+    <parameter name="logo" class="java.io.InputStream"/>
+
     <parameter name="idOrdine" class="java.lang.String"/>
     <parameter name="dataCreazione" class="java.lang.String"/>
     <parameter name="cliente" class="java.lang.String"/>
@@ -22,8 +24,14 @@
 
     <title>
         <band height="80">
+
+            <image>
+                <reportElement x="0" y="0" width="100" height="50"/>
+                <imageExpression><![CDATA[$P{logo}]]></imageExpression>
+            </image>
+
             <staticText>
-                <reportElement x="0" y="10" width="555" height="30"/>
+                <reportElement x="110" y="10" width="445" height="30"/>
                 <textElement textAlignment="Center">
                     <font size="18" isBold="true"/>
                 </textElement>

@@ -9,6 +9,7 @@ COPY target/*.jar gestione-ordini.jar
 RUN mkdir -p /app/ricevute
 RUN mkdir -p /app/reports/template
 COPY reports/template/order-payment-receipt.jrxml /app/reports/template/order-payment-receipt.jrxml
+COPY reports/template/logo_by_AI.png /app/reports/template/logo.png
 # Esponi la porta 8080 all'esterno
 EXPOSE 8080
 # Runna questo comando al run del container

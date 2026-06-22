@@ -71,8 +71,11 @@ public class RicevitoreRicevute {
             JRSaver.saveObject(report, jasperTemplateDir + jasperTemplateFile + ".jasper");
             log.trace("Saved .jasper file.");
 
+            InputStream fileLogo = new FileInputStream(jasperTemplateDir + "logo.png");
+
             Map<String, Object> params = new HashMap<>();
-            params.put("idOrdine", ordine.getIdOrdine().toString()); // Convertito in Stringa!
+            params.put("logo", fileLogo);
+            params.put("idOrdine", ordine.getIdOrdine().toString());
             params.put("dataCreazione", now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
             params.put("cliente", ordine.getUsernameCliente() + " (" + ordine.getEmailCliente() + ")");
             params.put("descrizione", ordine.getDescrizione());
