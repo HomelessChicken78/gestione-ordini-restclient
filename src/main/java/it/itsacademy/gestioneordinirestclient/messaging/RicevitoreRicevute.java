@@ -74,21 +74,21 @@ public class RicevitoreRicevute {
 
             Map<String, Object> params = new HashMap<>();
 
-            try (InputStream fileLogo = new FileInputStream(jasperTemplateDir + "logo.png")) {
-                params.put("logo", fileLogo);
-            } catch (IOException e) {
-                log.error("Error finding logo file", e);
-                throw e;
-            }
             params.put("idOrdine", ordine.getIdOrdine().toString());
             params.put("dataCreazione", now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
             params.put("cliente", ordine.getUsernameCliente() + " (" + ordine.getEmailCliente() + ")");
             params.put("descrizione", ordine.getDescrizione());
             params.put("totale", "€ " + ordine.getTotale());
 
-            JasperPrint print = JasperFillManager.fillReport(report, params, new net.sf.jasperreports.engine.JREmptyDataSource());
+            try (InputStream fileLogo = new FileInputStream(jasperTemplateDir + "logo.png")) {
+                params.put("logo", fileLogo);
 
-            JasperExportManager.exportReportToPdfFile(print, "/app/ricevute/" + reportFileName + ".pdf");
+                JasperPrint print = JasperFillManager.fillReport(report, params, new net.sf.jasperreports.engine.JREmptyDataSource());
+                JasperExportManager.exportReportToPdfFile(print, "/app/ricevute/" + reportFileName + ".pdf");
+            } catch (IOException e) {
+                log.error("Error finding logo file", e);
+                throw e;
+            }
         } catch (JRException e) {
             log.error("Error creating report.", e);
             throw e;
