@@ -4,7 +4,11 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 # Prendi dal mio pc il .jar e mettilo nel container
 COPY target/*.jar gestione-ordini.jar
+
+# Non serve fare mkdir qui, perché usiamo il volume, ma lo lasciamo per sicurezza
 RUN mkdir -p /app/ricevute
+RUN mkdir -p /app/reports/template
+COPY reports/template/order-payment-receipt.jrxml /app/reports/template/order-payment-receipt.jrxml
 # Esponi la porta 8080 all'esterno
 EXPOSE 8080
 # Runna questo comando al run del container
