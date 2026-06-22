@@ -11,23 +11,15 @@
               rightMargin="20"
               topMargin="20"
               bottomMargin="20"
+              whenNoDataType="AllSectionsNoDetail"
               uuid="c2b3a7d0-0000-0000-0000-000000000001">
 
-    <!-- ===================== -->
-    <!-- FIELDS -->
-    <!-- ===================== -->
-    <field name="id_ordine" class="java.lang.String"/>
-    <field name="data_creazione" class="java.sql.Date"/>
-    <field name="totale" class="java.lang.Double"/>
-    <field name="descrizione" class="java.lang.String"/>
-    <field name="stato_ordine" class="java.lang.String"/>
-    <field name="username_cliente" class="java.lang.String"/>
-    <field name="email_cliente" class="java.lang.String"/>
-    <field name="nome_ricevuta" class="java.lang.String"/>
+    <parameter name="idOrdine" class="java.lang.String"/>
+    <parameter name="dataCreazione" class="java.lang.String"/>
+    <parameter name="cliente" class="java.lang.String"/>
+    <parameter name="descrizione" class="java.lang.String"/>
+    <parameter name="totale" class="java.lang.String"/>
 
-    <!-- ===================== -->
-    <!-- TITLE -->
-    <!-- ===================== -->
     <title>
         <band height="80">
             <staticText>
@@ -40,72 +32,37 @@
         </band>
     </title>
 
-    <!-- ===================== -->
-    <!-- DETAIL -->
-    <!-- ===================== -->
-    <detail>
+    <summary>
         <band height="250">
 
-            <!-- ID Ordine -->
             <textField>
-                <reportElement x="0" y="10" width="300" height="20"/>
-                <textFieldExpression><![CDATA["ID Ordine: " + $F{id_ordine}]]></textFieldExpression>
+                <reportElement x="0" y="10" width="500" height="20"/>
+                <textFieldExpression><![CDATA["ID Ordine: " + $P{idOrdine}]]></textFieldExpression>
             </textField>
 
-            <!-- Data -->
             <textField>
                 <reportElement x="0" y="30" width="300" height="20"/>
-                <textFieldExpression><![CDATA["Data creazione: " + $F{data_creazione}]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Data: " + $P{dataCreazione}]]></textFieldExpression>
             </textField>
 
-            <!-- Cliente -->
             <textField>
-                <reportElement x="0" y="60" width="400" height="20"/>
-                <textFieldExpression><![CDATA["Cliente: " + $F{username_cliente} + " (" + $F{email_cliente} + ")"]]></textFieldExpression>
+                <reportElement x="0" y="60" width="500" height="20"/>
+                <textFieldExpression><![CDATA["Cliente: " + $P{cliente}]]></textFieldExpression>
             </textField>
 
-            <!-- Nome ricevuta -->
+            <textField textAdjust="StretchHeight">
+                <reportElement x="0" y="90" width="550" height="40"/>
+                <textFieldExpression><![CDATA["Descrizione: " + $P{descrizione}]]></textFieldExpression>
+            </textField>
+
             <textField>
-                <reportElement x="0" y="80" width="400" height="20"/>
-                <textFieldExpression><![CDATA["Intestazione ricevuta: " + $F{nome_ricevuta}]]></textFieldExpression>
-            </textField>
-
-            <!-- Descrizione -->
-            <textField isStretchWithOverflow="true">
-                <reportElement x="0" y="110" width="550" height="40"/>
-                <textFieldExpression><![CDATA["Descrizione: " + $F{descrizione}]]></textFieldExpression>
-            </textField>
-
-            <!-- Stato ordine -->
-            <textField>
-                <reportElement x="0" y="160" width="300" height="20"/>
-                <textFieldExpression><![CDATA["Stato: " + $F{stato_ordine}]]></textFieldExpression>
-            </textField>
-
-            <!-- Totale -->
-            <textField>
-                <reportElement x="0" y="190" width="300" height="30"/>
+                <reportElement x="0" y="180" width="300" height="30"/>
                 <textElement>
-                    <font size="14" isBold="true"/>
+                    <font size="16" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Totale: € " + $F{totale}]]></textFieldExpression>
+                <textFieldExpression><![CDATA["Totale: " + $P{totale}]]></textFieldExpression>
             </textField>
 
-        </band>
-    </detail>
-
-    <!-- ===================== -->
-    <!-- SUMMARY -->
-    <!-- ===================== -->
-    <summary>
-        <band height="50">
-            <staticText>
-                <reportElement x="0" y="10" width="555" height="30"/>
-                <textElement textAlignment="Center">
-                    <font size="12" isItalic="true"/>
-                </textElement>
-                <text><![CDATA[Grazie per il tuo acquisto]]></text>
-            </staticText>
         </band>
     </summary>
 
