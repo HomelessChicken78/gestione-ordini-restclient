@@ -11,12 +11,15 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,12 +31,19 @@ import static java.time.LocalDateTime.now;
 @RequiredArgsConstructor @Slf4j
 public class RicevitoreRicevute {
     private final RepositoryOrdine repositoryOrdine;
+    private final S3AsyncClient s3;
 
     @Value("${reports.template.directory}")
     private String jasperTemplateDir;
 
     @Value("${reports.template.filename}")
     private String jasperTemplateFile;
+
+    @Value("${s3.bucket.name}")
+    private String bucketS3;
+
+    @Value("${s3.bucket.prefixes.root}")
+    private String rootPrefix;
 
     @RabbitListener(queues = {"receipts.file.queue"})
     public void createReceiptFile(UUID idOrdine) throws IOException {
@@ -85,6 +95,27 @@ public class RicevitoreRicevute {
 
                 JasperPrint print = JasperFillManager.fillReport(report, params, new net.sf.jasperreports.engine.JREmptyDataSource());
                 JasperExportManager.exportReportToPdfFile(print, "/app/ricevute/" + reportFileName + ".pdf");
+
+                final String s3ObjectKey = rootPrefix + "/" + ordine.getUsernameCliente() + "/" + reportFileName + ".pdf"; // Che nome dare all'oggetto s3
+                final Path reportFromPath = Paths.get("/app/ricevute/" + reportFileName + ".pdf");
+                s3.putObject(
+                        b -> b.bucket(bucketS3).key(s3ObjectKey).contentType("application/pdf").build(),
+                        AsyncRequestBody.fromFile(reportFromPath)
+                )
+                .whenComplete((response, exception) -> {
+                    // ATTENZIONE: Questo blocco di codice NON viene eseguito dal thread principale.
+                    // Verrà eseguito in futuro dal thread di Netty che riceve la risposta da AWS.
+                    if (exception != null)
+                        log.error("[Thread: {}] Error during the upload of {}: {}",
+                            Thread.currentThread().getName(), s3ObjectKey, exception.getMessage()
+                        );
+                    else
+                        log.info("[Thread: {}] File uploaded correctly. ETag: {}",
+                            Thread.currentThread().getName(), response.eTag()
+                        );
+                    }
+                )
+                ;
             } catch (IOException e) {
                 log.error("Error finding logo file", e);
                 throw e;
