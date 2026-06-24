@@ -4,9 +4,7 @@ import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 
 import java.time.Duration;
 
@@ -25,8 +23,8 @@ public class GeneralConfigurations {
     }
 
     @Bean
-    public S3Client s3Client() {
-        return S3Client.builder()
+    public S3AsyncClient s3AsyncClient() {
+        return S3AsyncClient.builder()
                 // Non serve mettere il Credential Provider, perchè prende quello definito sul vostro PC tramite AWS CLI
                 //.credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
                 // .credentialsProvider(DefaultCredentialsProvider.create()) NB: Non serve: lo fa da solo
