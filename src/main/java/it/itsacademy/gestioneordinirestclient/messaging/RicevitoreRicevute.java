@@ -33,6 +33,9 @@ public class RicevitoreRicevute {
     private final RepositoryOrdine repositoryOrdine;
     private final S3AsyncClient s3;
 
+    @Value("${features.s3.receipt-upload-enabled}")
+    private boolean isS3UploadEnabled;
+
     @Value("${reports.template.directory}")
     private String jasperTemplateDir;
 
@@ -96,26 +99,26 @@ public class RicevitoreRicevute {
                 JasperPrint print = JasperFillManager.fillReport(report, params, new net.sf.jasperreports.engine.JREmptyDataSource());
                 JasperExportManager.exportReportToPdfFile(print, "/app/ricevute/" + reportFileName + ".pdf");
 
-                final String s3ObjectKey = rootPrefix + "/" + ordine.getUsernameCliente() + "/" + reportFileName + ".pdf"; // Che nome dare all'oggetto s3
-                final Path reportFromPath = Paths.get("/app/ricevute/" + reportFileName + ".pdf");
-                s3.putObject(
-                        b -> b.bucket(bucketS3).key(s3ObjectKey).contentType("application/pdf").build(),
+                if (isS3UploadEnabled) {
+                    final String s3ObjectKey = rootPrefix + "/" + ordine.getUsernameCliente() + "/" + reportFileName + ".pdf"; // Che nome dare all'oggetto s3
+                    final Path reportFromPath = Paths.get("/app/ricevute/" + reportFileName + ".pdf");
+
+                    s3.putObject(b -> b.bucket(bucketS3).key(s3ObjectKey).contentType("application/pdf").build(),
                         AsyncRequestBody.fromFile(reportFromPath)
-                )
-                .whenComplete((response, exception) -> {
-                    // ATTENZIONE: Questo blocco di codice NON viene eseguito dal thread principale.
-                    // Verrà eseguito in futuro dal thread di Netty che riceve la risposta da AWS.
-                    if (exception != null)
-                        log.error("[Thread: {}] Error during the upload of {}: {}",
-                            Thread.currentThread().getName(), s3ObjectKey, exception.getMessage()
-                        );
-                    else
-                        log.info("[Thread: {}] File uploaded correctly. ETag: {}",
-                            Thread.currentThread().getName(), response.eTag()
-                        );
-                    }
-                )
-                ;
+                    )
+                    .whenComplete((response, exception) -> {
+                        // ATTENZIONE: Questo blocco di codice NON viene eseguito dal thread principale.
+                        // Verrà eseguito in futuro dal thread di Netty che riceve la risposta da AWS.
+                        if (exception != null)
+                            log.error("[Thread: {}] Error during the upload of {}: {}",
+                                Thread.currentThread().getName(), s3ObjectKey, exception.getMessage()
+                            );
+                        else
+                            log.info("[Thread: {}] File uploaded correctly. ETag: {}",
+                                Thread.currentThread().getName(), response.eTag()
+                            );
+                    });
+                }
             } catch (IOException e) {
                 log.error("Error finding logo file", e);
                 throw e;
