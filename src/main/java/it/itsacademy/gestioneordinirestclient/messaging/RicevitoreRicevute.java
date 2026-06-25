@@ -52,13 +52,13 @@ public class RicevitoreRicevute {
     public void createReceiptFile(UUID idOrdine) throws IOException {
         Ordine ordine = findByIdOrLogAndThrow(idOrdine);
 
-        String ricevutaFileName = "RICEVUTA_" + now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt";
+        String ricevutaFileName = "RICEVUTA_" + now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
-        try (var writer = Files.newBufferedWriter(Path.of("/app/ricevute/" + ricevutaFileName))) {
+        try (var writer = Files.newBufferedWriter(Path.of("/app/ricevute/" + ricevutaFileName + ".txt"))) {
             String receiptMsg = "L'utente " + ordine.getUsernameCliente()
                     + " in data " + now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                     + " ha pagato " + ordine.getTotale() + "€";
-            log.info("Creating receipt. file_name={}, message={}", ricevutaFileName, receiptMsg);
+            log.info("Creating receipt. file_name={}, message={}", ricevutaFileName + ".txt", receiptMsg);
 
             writer.write(receiptMsg);
             log.debug("Written on file");
@@ -75,7 +75,7 @@ public class RicevitoreRicevute {
     public void createReceiptPdf(UUID idOrdine) throws IOException, JRException {
         Ordine ordine = findByIdOrLogAndThrow(idOrdine);
 
-        String reportFileName = "REPORT_" + now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String reportFileName = "RICEVUTA_" + now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
         try (InputStream stream = new FileInputStream(jasperTemplateDir + jasperTemplateFile + ".jrxml")) {
             log.trace("Creating report.");
