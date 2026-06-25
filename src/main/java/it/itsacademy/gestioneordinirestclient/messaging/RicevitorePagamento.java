@@ -13,8 +13,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-@Component @Transactional
+@Component
 @RequiredArgsConstructor @Slf4j
+// NOTA BENE: Questo metodo è volutamente NON @Transactional.
+// Se fosse @Transactional, il commit sul DB avverrebbe solo alla fine del metodo.
+// Di conseguenza, i messaggi RabbitMQ farebbero partire i worker asincroni (es. ricevute)
+// prima del commit. I worker leggerebbero lo stato vecchio (IN_ELABORAZIONE) dal DB
+// e, al momento del loro salvataggio, andrebbero a sovrascrivere accidentalmente
+// lo stato PAGATO (Race condition / Lost update).
+// Rimuovendo @Transactional sfruttiamo l'auto-commit di JPA per salvare lo stato PAGATO
+// prima di inviare i messaggi in coda.
+// Drawback: la transazione è solo sul save e non è atomica. Per tale motivo questa non è la soluzione corretta
 public class RicevitorePagamento {
     private final RepositoryOrdine repositoryOrdine;
     private final RabbitTemplate rabbitTemplate;
@@ -29,13 +38,14 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
+        ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
+        repositoryOrdine.save(ordine);
+
         rabbitTemplate.convertAndSend("receipts.exchange", "receipts.file.create", idOrdine);
         rabbitTemplate.convertAndSend("receipts.exchange", "receipts.pdf.create", idOrdine);
 
         rabbitTemplate.convertAndSend("payments.exchange", "email.payment.accettato",
                 new OrderPaymentEmailEvent(ordine.getIdOrdine(), ordine.getEmailCliente(), ordine.getDescrizione()));
-
-        ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
     }
 
     @RabbitListener(queues = {"payments.failure.queue"})
@@ -48,10 +58,11 @@ public class RicevitorePagamento {
         if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
             return;
 
+        ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
+        repositoryOrdine.save(ordine);
+
         rabbitTemplate.convertAndSend("payments.exchange", "email.payment.rifiutato",
                 new OrderPaymentEmailEvent(ordine.getIdOrdine(), ordine.getEmailCliente(), ordine.getDescrizione()));
-
-        ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
     }
 
     private Ordine findByIdOrLogAndThrow(UUID idOrdine) {
