@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.time.Duration;
 
@@ -42,6 +43,19 @@ public class GeneralConfigurations {
                 // .credentialsProvider(DefaultCredentialsProvider.create())
                 //Tempo di attesa massima per l'interazione con AWS
                 .overrideConfiguration(b -> b.apiCallTimeout(Duration.ofMinutes(2)))
+                .build();
+    }
+
+    @Bean
+    public S3Presigner s3Presigner() {
+        // Cerca le env "AWS_ACCESS_KEY_ID_FILE" e "AWS_SECRET_ACCESS_KEY_FILE". A queste env corrisponde un path interno
+        // al docker. Legge i file all'interno di quel path per cercare il valore. Ritorna quel valore contenente le credenziali.a
+        String accessKey = resolver.resolveFile("AWS_ACCESS_KEY_ID");
+        String secretKey = resolver.resolveFile("AWS_SECRET_ACCESS_KEY");
+
+        return S3Presigner.builder()
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKey, secretKey)))
                 .build();
     }
 }
