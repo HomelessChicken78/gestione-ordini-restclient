@@ -15,8 +15,14 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -28,12 +34,41 @@ public class OrdineServiceImpl implements OrdineService {
     private final RestClient restClient;
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper; // importante per estrarre il messaggio d'errore 402 dall'altro microservizio
+    private final S3AsyncClient s3;
+
+    @Value("${features.s3.receipt-upload-enabled}")
+    private boolean isS3UploadEnabled;
+
+    @Value("${s3.bucket.name}")
+    private String bucketS3;
+
+    @Value("${s3.bucket.prefixes.root}")
+    private String rootPrefix;
 
     @Value("${api.gestione-pagamenti.url}")
     private String gestionePagamentiUrl;
 
     @Value("${api.auth.url}")
     private String authUrl;
+
+    private Ordine validateOrderForPayment(UUID idOrdine) {
+        log.debug("Paying order. id={}", idOrdine);
+        Ordine ordine = findByIdOrLogAndThrow(idOrdine);
+
+        // Controlla che l'ordine non sia già stato pagato o in elaborazione (per evitare di inondare di richieste inutili)
+        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || ordine.getStatoOrdine() == Ordine.StatoOrdine.IN_ELABORAZIONE) {
+            log.debug("Tried to pay order that was already paid or elaborating. id={} orderStatus={}", ordine.getIdOrdine(), ordine.getStatoOrdine());
+            throw new ConflictException("Non è possibile pagare un ordine già pagato o in elaborazione");
+        }
+
+        // Controlla che l'ordine non sia cancellato
+        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.ELIMINATO) {
+            log.debug("Tried to pay deleted order. id={}", ordine.getIdOrdine());
+            throw new ConflictException("Non è possibile pagare un ordine eliminato");
+        }
+
+        return ordine;
+    }
 
     @Override
     public OrdineDTO creaOrdine(CreaOrdineDTO nuovoOrdine, String username) {
@@ -76,20 +111,7 @@ public class OrdineServiceImpl implements OrdineService {
 
     @Override
     public OrdineDTO pagaOrdine(UUID idOrdine) {
-        log.debug("Paying order. id={}", idOrdine);
-        Ordine ordine = findByIdOrLogAndThrow(idOrdine);
-
-        // Controlla che l'ordine non sia già stato pagato o in elaborazione (per evitare di inondare di richieste inutili)
-        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || ordine.getStatoOrdine() == Ordine.StatoOrdine.IN_ELABORAZIONE) {
-            log.debug("Tried to pay order that was already paid or elaborating. id={} orderStatus={}", ordine.getIdOrdine(), ordine.getStatoOrdine());
-            throw new ConflictException("Non è possibile pagare un ordine già pagato o in elaborazione");
-        }
-
-        // Controlla che l'ordine non sia cancellato
-        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.ELIMINATO) {
-            log.debug("Tried to pay deleted order. id={}", ordine.getIdOrdine());
-            throw new ConflictException("Non è possibile pagare un ordine eliminato");
-        }
+        Ordine ordine = validateOrderForPayment(idOrdine);
 
         // Prima mettiamo l'ordine come pagato poi inviamo il messaggio sulla coda.
         // Se facessimo il contrario potrebbe accadere che il .save vada in errore ma il messaggio è già stato inviato
@@ -108,6 +130,50 @@ public class OrdineServiceImpl implements OrdineService {
                 new CreaPagamentoDTO(ordine.getIdOrdine(), ordine.getTotale()));
 
         return mapper.toDTO(salvato);
+    }
+
+    @Override
+    public void pagaOrdine(UUID idOrdine, MultipartFile file) {
+        Ordine ordine = validateOrderForPayment(idOrdine);
+        final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+        if (file.getSize() > MAX_FILE_SIZE) throw new IllegalArgumentException("File size must not exceed 5 MB");
+        if (!"application/pdf".equals(file.getContentType())) throw new IllegalArgumentException("Uploaded file must be a PDF.");
+        if (isS3UploadEnabled) {
+            log.debug("S3 upload is enabled. Proceeding with upload...");
+
+            final String s3ObjectKey = rootPrefix + "/" + ordine.getUsernameCliente() + "/" + file.getOriginalFilename() + ".pdf"; // Che nome dare all'oggetto s3
+            final Path reportFromPath = Paths.get("/app/ricevute/" + file.getOriginalFilename() + ".pdf");
+            ordine.setStatoOrdine(Ordine.StatoOrdine.IN_ELABORAZIONE);
+
+            try {
+                // Leggi i bytes direttamente dal Multipart file
+                byte[] fileBytes = file.getBytes();
+
+                s3.putObject(b -> b.bucket(bucketS3).key(s3ObjectKey).contentType("application/pdf").build(),
+                                AsyncRequestBody.fromBytes(fileBytes)
+                        )
+                        .whenComplete((response, exception) -> {
+                            if (exception != null)
+                                log.error("[Thread: {}] Error during the upload of {}: {}",
+                                        Thread.currentThread().getName(), s3ObjectKey, exception.getMessage()
+                                );
+                            else {
+                                log.info("[Thread: {}] File uploaded correctly. ETag: {}",
+                                        Thread.currentThread().getName(), response.eTag()
+                                );
+                                ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
+                            }
+                        })
+                        .join(); // gestisce l'asincronia come una sincronia: così rimane nella stessa transazione
+            } catch (IOException e) {
+                log.error("Failed to read bytes from uploaded file", e);
+                ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
+                throw new RuntimeException("Error processing file upload", e);
+            }
+        } else {
+            ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
+        }
     }
 
     @Override

@@ -7,7 +7,9 @@ import it.itsacademy.gestioneordinirestclient.service.OrdineService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -38,6 +40,14 @@ public class OrdineController {
         log.info("Order with id={} paid",
                 paidOrder.getIdOrdine());
         return paidOrder;
+    }
+
+    @PatchMapping(path = "/{idOrdine}/pagamentoTramiteAssegno", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void pagaTramiteAssegno(@PathVariable UUID idOrdine, @RequestPart MultipartFile file) {
+        ordineService.pagaOrdine(idOrdine, file);
+        log.info("Order with id={} paid",
+                idOrdine);
     }
 
     @GetMapping(path = "/{idOrdine}", produces = json)
