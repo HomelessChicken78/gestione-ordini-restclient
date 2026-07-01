@@ -154,6 +154,7 @@ public class OrdineServiceImpl implements OrdineService {
                         // Alla fine del metodo l'ordine verrebbe comunque cambiato (per il dirty checking) ma nel frattempo
                         // la chiamata asincrona si troverebbe con un ordine al vecchio stato (da pagare) e fallirebbe.
                         .join();
+                ordine.setNomeRicevuta(file.getOriginalFilename());
                 log.info("File uploaded correctly.");
             } catch (IOException e) {
                 log.error("Failed to read bytes from uploaded file", e);
