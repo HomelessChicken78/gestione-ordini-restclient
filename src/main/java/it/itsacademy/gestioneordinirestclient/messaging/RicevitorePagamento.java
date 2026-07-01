@@ -32,17 +32,26 @@ public class RicevitorePagamento {
     public void successfulPayment(UUID idOrdine)  {
         Ordine ordine = findByIdOrLogAndThrow(idOrdine);
 
+        Ordine.StatoOrdine statoAttuale = ordine.getStatoOrdine();
+
         // Per sicurezza controlliamo che lo stato sia in elaborazione.
         // Infatti AMQ garantisce che il messaggio sia mandato almeno una volta, ma nulla vieta che venga inviato due volte.
         // NB: Non lanciamo eccezioni RabbitMQ penserebbe che ci sia stato un errore di elaborazione e rimetterebbe il messaggio in coda
-        if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
+        if (statoAttuale != Ordine.StatoOrdine.IN_ELABORAZIONE &&
+                statoAttuale != Ordine.StatoOrdine.IN_ELABORAZIONE_CON_FILE) {
+            log.debug("Ignored success message for order id={} because status is {}", idOrdine, statoAttuale);
             return;
+        }
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
         repositoryOrdine.save(ordine);
 
-        rabbitTemplate.convertAndSend("receipts.exchange", "receipts.file.create", idOrdine);
-        rabbitTemplate.convertAndSend("receipts.exchange", "receipts.pdf.create", idOrdine);
+        // Generiamo la ricevuta se non è stato caricato un file dall'utente
+        if (statoAttuale == Ordine.StatoOrdine.IN_ELABORAZIONE) {
+            log.debug("Triggering receipt creation for order id={}", idOrdine);
+            rabbitTemplate.convertAndSend("receipts.exchange", "receipts.file.create", idOrdine);
+            rabbitTemplate.convertAndSend("receipts.exchange", "receipts.pdf.create", idOrdine);
+        } else log.debug("Skipped receipt creation for order id={} because a file was already uploaded.", idOrdine);
 
         rabbitTemplate.convertAndSend("payments.exchange", "email.payment.accettato",
                 new OrderPaymentEmailEvent(ordine.getIdOrdine(), ordine.getEmailCliente(), ordine.getDescrizione()));
@@ -55,8 +64,11 @@ public class RicevitorePagamento {
         // Per sicurezza controlliamo che lo stato sia in elaborazione.
         // Infatti AMQ garantisce che il messaggio sia mandato almeno una volta, ma nulla vieta che venga inviato due volte.
         // NB: Non lanciamo eccezioni RabbitMQ penserebbe che ci sia stato un errore di elaborazione e rimetterebbe il messaggio in coda
-        if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE)
+        if (ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE &&
+                ordine.getStatoOrdine() != Ordine.StatoOrdine.IN_ELABORAZIONE_CON_FILE) {
+            log.debug("Ignored failure message for order id={} because status is {}", idOrdine, ordine.getStatoOrdine());
             return;
+        }
 
         ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
         repositoryOrdine.save(ordine);

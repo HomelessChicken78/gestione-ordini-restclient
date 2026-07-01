@@ -26,6 +26,6 @@ public class Ordine {
 
     public enum StatoOrdine {
         DA_PAGARE, PAGATO, ELIMINATO,
-        IN_ELABORAZIONE // Stato temporaneo usato quando l'altro microservizio elabora la nostra richiesta di pagamento
+        IN_ELABORAZIONE, IN_ELABORAZIONE_CON_FILE // Stato temporaneo usato quando l'altro microservizio elabora la nostra richiesta di pagamento
     }
 }

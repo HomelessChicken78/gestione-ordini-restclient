@@ -21,8 +21,6 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -56,7 +54,7 @@ public class OrdineServiceImpl implements OrdineService {
         Ordine ordine = findByIdOrLogAndThrow(idOrdine);
 
         // Controlla che l'ordine non sia già stato pagato o in elaborazione (per evitare di inondare di richieste inutili)
-        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || ordine.getStatoOrdine() == Ordine.StatoOrdine.IN_ELABORAZIONE) {
+        if (ordine.getStatoOrdine() == Ordine.StatoOrdine.PAGATO || ordine.getStatoOrdine() == Ordine.StatoOrdine.IN_ELABORAZIONE || ordine.getStatoOrdine() == Ordine.StatoOrdine.IN_ELABORAZIONE_CON_FILE) {
             log.debug("Tried to pay order that was already paid or elaborating. id={} orderStatus={}", ordine.getIdOrdine(), ordine.getStatoOrdine());
             throw new ConflictException("Non è possibile pagare un ordine già pagato o in elaborazione");
         }
@@ -143,7 +141,6 @@ public class OrdineServiceImpl implements OrdineService {
             log.debug("S3 upload is enabled. Proceeding with upload...");
 
             final String s3ObjectKey = rootPrefix + "/" + ordine.getUsernameCliente() + "/" + file.getOriginalFilename() + ".pdf"; // Che nome dare all'oggetto s3
-            final Path reportFromPath = Paths.get("/app/ricevute/" + file.getOriginalFilename() + ".pdf");
             ordine.setStatoOrdine(Ordine.StatoOrdine.IN_ELABORAZIONE);
 
             try {
@@ -151,27 +148,33 @@ public class OrdineServiceImpl implements OrdineService {
                 byte[] fileBytes = file.getBytes();
 
                 s3.putObject(b -> b.bucket(bucketS3).key(s3ObjectKey).contentType("application/pdf").build(),
-                                AsyncRequestBody.fromBytes(fileBytes)
-                        )
-                        .whenComplete((response, exception) -> {
-                            if (exception != null)
-                                log.error("[Thread: {}] Error during the upload of {}: {}",
-                                        Thread.currentThread().getName(), s3ObjectKey, exception.getMessage()
-                                );
-                            else {
-                                log.info("[Thread: {}] File uploaded correctly. ETag: {}",
-                                        Thread.currentThread().getName(), response.eTag()
-                                );
-                                ordine.setStatoOrdine(Ordine.StatoOrdine.PAGATO);
-                            }
-                        })
-                        .join(); // gestisce l'asincronia come una sincronia: così rimane nella stessa transazione
+                                AsyncRequestBody.fromBytes(fileBytes))
+                        // Gestisce l'asincronia come una sincronia: così rimane nella stessa transazione.
+                        // Non usiamo whenCompleted perchè whenCompleted viene eseguito da un altro thread e uscirebbe dalla transazione.
+                        // Alla fine del metodo l'ordine verrebbe comunque cambiato (per il dirty checking) ma nel frattempo
+                        // la chiamata asincrona si troverebbe con un ordine al vecchio stato (da pagare) e fallirebbe.
+                        .join();
+                log.info("File uploaded correctly.");
             } catch (IOException e) {
                 log.error("Failed to read bytes from uploaded file", e);
-                ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
+                throw new RuntimeException("Failed to read bytes from uploaded file", e);
+            } catch (Exception e) {
+                log.error("Error during the upload of {}: {}", s3ObjectKey, e.getMessage());
+                throw new RuntimeException("Error uploading file to S3", e);
+            }
+
+            ordine.setStatoOrdine(Ordine.StatoOrdine.IN_ELABORAZIONE_CON_FILE);
+            repositoryOrdine.saveAndFlush(ordine);
+
+            try {
+                rabbitTemplate.convertAndSend("payments.exchange", "payments.order.created",
+                    new CreaPagamentoDTO(ordine.getIdOrdine(), ordine.getTotale()));
+            } catch (Exception e) {
+                log.error("Failed to send payment request to RabbitMQ for order ID: {}", ordine.getIdOrdine(), e);
                 throw new RuntimeException("Error processing file upload", e);
             }
         } else {
+            log.warn("S3 upload has been disabled. Rolling back the payment for the order. idOrdine={}", idOrdine);
             ordine.setStatoOrdine(Ordine.StatoOrdine.DA_PAGARE);
         }
     }
