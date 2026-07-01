@@ -2,6 +2,7 @@ package it.itsacademy.gestioneordinirestclient.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.envers.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -9,7 +10,8 @@ import java.util.UUID;
 @Entity
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
-public class Ordine {
+@Audited @AuditOverride(forClass = Auditable.class) // Dice a Envers di tracciare la cronologia anche delle 4 colonne ereditate
+public class Ordine extends Auditable{
     @GeneratedValue(strategy = GenerationType.UUID)
     @Id private UUID idOrdine;
     private LocalDate dataCreazione = LocalDate.now();

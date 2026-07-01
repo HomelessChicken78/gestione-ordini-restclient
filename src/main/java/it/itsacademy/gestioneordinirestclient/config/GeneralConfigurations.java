@@ -5,6 +5,8 @@ import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
@@ -13,6 +15,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import java.time.Duration;
 
 @Configuration @RequiredArgsConstructor
+@EnableJpaAuditing(auditorAwareRef = "getAuditorAwareImpl")
 public class GeneralConfigurations {
     private final DockerSecretResolver resolver;
 
@@ -57,5 +60,11 @@ public class GeneralConfigurations {
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))
                 .build();
+    }
+
+    // Dice dove prendere chi ha fatto le modifiche/la creazione
+    @Bean
+    AuditorAware<String> getAuditorAwareImpl(){
+        return new AuditorAwareImpl();
     }
 }
